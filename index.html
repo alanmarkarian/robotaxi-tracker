@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tesla Robotaxi / Cybercab Deployment Tracker</title>
+<style>
+  .viz-root, :root {
+    color-scheme: light;
+    --surface-1: #fcfcfb;
+    --page: #f9f9f7;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --grid: #e1e0d9;
+    --baseline: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --seq-250: #86b6ef;
+    --seq-350: #5598e7;
+    --seq-450: #2a78d6;
+    --seq-550: #1c5cab;
+    --seq-650: #104281;
+    --good: #0ca30c;
+    --good-text: #006300;
+    --warning: #fab219;
+    --serious: #ec835a;
+    --critical: #d03b3b;
+    --wash: rgba(42,120,214,0.07);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-1: #1a1a19;
+      --page: #0d0d0d;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --grid: #2c2c2a;
+      --baseline: #383835;
+      --border: rgba(255,255,255,0.12);
+      --seq-250: #86b6ef;
+      --seq-350: #5598e7;
+      --seq-450: #3987e5;
+      --seq-550: #2a78d6;
+      --seq-650: #1c5cab;
+      --good: #0ca30c;
+      --good-text: #0ca30c;
+      --wash: rgba(57,135,229,0.12);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.45;
+    padding: 24px 16px 64px;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; }
+  header h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+  header .sub { color: var(--text-secondary); margin-top: 4px; font-size: 13px; }
+  header .asof { display:inline-block; margin-top: 8px; font-size: 12px; color: var(--text-secondary); border: 1px solid var(--border); background: var(--surface-1); padding: 3px 10px; border-radius: 999px; }
+
+  /* Stat tiles */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 20px 0 8px; }
+  .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .tile .v { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+  .tile .l { font-size: 11.5px; color: var(--text-secondary); margin-top: 2px; }
+  .tile .d { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  section { margin-top: 28px; }
+  h2 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+  h2 .hint { font-weight: 400; font-size: 12px; color: var(--text-muted); margin-left: 8px; }
+
+  /* Rubric */
+  .rubric { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; }
+  .rub { background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; font-size: 12px; color: var(--text-secondary); }
+  .rub b { color: var(--text-primary); display: block; font-size: 12px; margin-bottom: 2px; }
+  .rub .num { color: var(--seq-450); font-weight: 700; margin-right: 4px; }
+  .keyline { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+  .keyline .dot { font-size: 11px; }
+
+  /* Main table */
+  .tablecard { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; min-width: 1150px; }
+  th {
+    text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-muted); font-weight: 600; padding: 10px 8px 8px; border-bottom: 1px solid var(--baseline);
+    white-space: nowrap; position: sticky; top: 0; background: var(--surface-1);
+  }
+  th.ms { text-align: center; padding: 10px 2px 8px; }
+  td { padding: 9px 8px; border-bottom: 1px solid var(--grid); vertical-align: middle; font-size: 13px; }
+  tr.cityrow { cursor: pointer; }
+  tr.cityrow:hover { background: var(--wash); }
+  tr:last-child td { border-bottom: none; }
+  td.rank { color: var(--text-muted); font-variant-numeric: tabular-nums; width: 30px; }
+  td.city { font-weight: 650; white-space: nowrap; }
+  td.city .st { font-weight: 400; color: var(--text-muted); font-size: 11.5px; margin-left: 3px; }
+  .badge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; }
+  .b-liveu { color: var(--good-text); border-color: var(--good); }
+  .b-lives { color: var(--seq-550); border-color: var(--seq-450); }
+  .b-prep  { color: var(--text-primary); border-color: var(--warning); }
+  .b-ann   { color: var(--text-secondary); }
+  .b-test  { color: var(--text-secondary); border-style: dashed; }
+  .b-sig   { color: var(--text-muted); border-style: dashed; }
+  td.pop, td.score-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.opp { white-space: nowrap; }
+  .oppdots span { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 3px; background: var(--grid); }
+  .oppdots span.on { background: var(--seq-450); }
+  .oppnote { font-size: 11px; color: var(--text-muted); margin-top: 2px; max-width: 170px; white-space: normal; }
+  /* Score bar */
+  .scorebar { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+  .scorebar .num { font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums; width: 34px; text-align: right; }
+  .bar { flex: 1; height: 10px; background: var(--grid); border-radius: 5px; overflow: hidden; min-width: 90px; }
+  .bar i { display: block; height: 100%; border-radius: 5px 4px 4px 5px; }
+  /* Milestone cells */
+  td.ms { text-align: center; padding: 9px 2px; width: 34px; }
+  .m { display: inline-flex; width: 16px; height: 16px; border-radius: 50%; align-items: center; justify-content: center; font-size: 9px; }
+  .m1 { background: var(--good); color: #fff; }
+  .m1::after { content: "✓"; font-weight: 700; }
+  .mh { background: transparent; border: 2px solid var(--warning); position: relative; overflow: hidden; }
+  .mh::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 50%; background: var(--warning); }
+  .m0 { background: transparent; border: 2px solid var(--grid); }
+  /* Detail rows */
+  tr.detail td { background: var(--wash); font-size: 12.5px; color: var(--text-secondary); padding: 12px 16px 14px; border-bottom: 1px solid var(--grid); }
+  tr.detail .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
+  tr.detail ul { list-style: none; }
+  tr.detail li { padding: 2px 0 2px 14px; position: relative; }
+  tr.detail li::before { content: "–"; position: absolute; left: 0; color: var(--text-muted); }
+  tr.detail a { color: var(--seq-550); text-decoration: none; }
+  tr.detail a:hover { text-decoration: underline; }
+  tr.detail .lbl { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; margin-bottom: 4px; }
+  .hiddenrow { display: none; }
+
+  /* Watchlist + catalysts */
+  .pillrow { display: flex; flex-wrap: wrap; gap: 6px; }
+  .pill { font-size: 12px; border: 1px dashed var(--border); background: var(--surface-1); color: var(--text-secondary); padding: 4px 10px; border-radius: 999px; }
+  .pill b { color: var(--text-primary); font-weight: 600; }
+  .cat { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .cat li { padding: 3px 0 3px 16px; position: relative; list-style: none; font-size: 13px; color: var(--text-secondary); }
+  .cat li::before { content: "▸"; position: absolute; left: 0; color: var(--seq-450); }
+  .cat b { color: var(--text-primary); font-weight: 600; }
+
+  /* Changelog */
+  .log { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 12.5px; color: var(--text-secondary); }
+  .log .entry { padding: 4px 0; }
+  .log .date { font-weight: 700; color: var(--text-primary); margin-right: 8px; font-variant-numeric: tabular-nums; }
+
+  /* Unit economics */
+  .econ-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 900px) { .econ-grid { grid-template-columns: 1fr; } }
+  .econ-card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .econ-card .head { padding: 12px 14px 10px; border-bottom: 1px solid var(--baseline); }
+  .econ-card .head b { font-size: 14px; }
+  .econ-card .head .tag { font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px; }
+  table.econ { min-width: 0; width: 100%; }
+  table.econ th { position: static; }
+  table.econ th.sc { text-align: right; padding-right: 12px; }
+  table.econ td { font-size: 12.5px; padding: 6px 8px 6px 14px; }
+  table.econ td.n { text-align: right; font-variant-numeric: tabular-nums; padding-right: 12px; white-space: nowrap; }
+  table.econ td.lbl2 { color: var(--text-secondary); }
+  table.econ tr.sub td { border-bottom: 1px solid var(--grid); }
+  table.econ tr.total td { border-top: 1px solid var(--baseline); border-bottom: none; font-weight: 700; color: var(--text-primary); }
+  table.econ tr.kpi td { border-bottom: none; padding-top: 2px; padding-bottom: 2px; font-weight: 600; }
+  table.econ tr.kpi.first td { padding-top: 10px; border-top: 1px dashed var(--grid); }
+  .pos { color: var(--good-text); }
+  .neg { color: var(--critical); }
+  .bearcol { color: var(--text-secondary); }
+  .bullcol { color: var(--text-primary); }
+  .hardrow { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 14px; }
+  .hard { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; }
+  .hard .v { font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+  .hard .l { font-size: 11px; color: var(--text-secondary); margin-top: 2px; line-height: 1.4; }
+  .hard .l a { color: var(--seq-550); text-decoration: none; }
+  .hard .l a:hover { text-decoration: underline; }
+  .hard.warn .v { color: var(--serious); }
+  .methd { font-size: 11.5px; color: var(--text-muted); margin-top: 10px; line-height: 1.55; }
+  .methd a { color: var(--seq-550); text-decoration: none; }
+  .unk { background: var(--surface-1); border: 1px dashed var(--border); border-radius: 10px; padding: 12px 14px; margin-top: 14px; }
+  .unk .t { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--text-muted); margin-bottom: 6px; }
+  .unk li { list-style: none; font-size: 12.5px; color: var(--text-secondary); padding: 2px 0 2px 14px; position: relative; }
+  .unk li::before { content: "?"; position: absolute; left: 0; color: var(--warning); font-weight: 700; }
+  .bench { margin-top: 14px; }
+  .divider { display: flex; align-items: center; gap: 14px; margin: 48px 0 4px; }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--baseline); }
+  .divider span { font-size: 18px; font-weight: 800; letter-spacing: 0.01em; }
+  .divsub { text-align: center; font-size: 12.5px; color: var(--text-muted); margin-bottom: 4px; }
+  /* Time-series charts */
+  .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 12px; }
+  .chartcard { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 14px 14px 8px; }
+  .chartcard .ct { font-size: 13px; font-weight: 700; }
+  .chartcard .cs { font-size: 11px; color: var(--text-muted); margin: 2px 0 6px; }
+  .chartcard svg { display: block; width: 100%; height: 170px; overflow: visible; }
+  .chartcard .axis { font-size: 10px; fill: var(--text-muted); }
+  .chartcard .gridline { stroke: var(--grid); stroke-width: 1; }
+  .chartcard .endlab { font-size: 11px; font-weight: 700; }
+  .cttip { position: fixed; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; font-size: 11.5px; box-shadow: 0 4px 14px rgba(0,0,0,0.12); display: none; z-index: 50; color: var(--text-primary); }
+  .cttip b { font-variant-numeric: tabular-nums; }
+  .legend { display: flex; gap: 14px; font-size: 11px; color: var(--text-secondary); margin-top: 4px; padding-bottom: 4px; }
+  .legend i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+
+  footer { margin-top: 28px; font-size: 11.5px; color: var(--text-muted); line-height: 1.6; }
+  footer a { color: var(--text-muted); }
+  .srcs { margin-top: 6px; }
+  .srcs a { margin-right: 12px; color: var(--seq-550); text-decoration: none; }
+  .srcs a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="wrap viz-root">
+
+<header>
+  <h1>Tesla Robotaxi / Cybercab Deployment Tracker</h1>
+  <div class="sub">City-by-city status of the robotaxi rollout, plus the unit economics of the four rideshare models — built for a quick periodic status check.</div>
+  <span class="asof">Data as of <b>&nbsp;July 18, 2026&nbsp;</b> · v1.5</span>
+</header>
+
+<section>
+  <h2>City Leaderboard <span class="hint">the bottom line — scored 0–10 on the launch milestones explained below · click any row for detail &amp; sources</span></h2>
+  <div class="tablecard">
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th>#</th><th>City</th><th>Status</th><th>Metro Pop.</th><th>Rideshare Opportunity</th>
+          <th>Score</th>
+          <th class="ms" title="Intent signal">1</th><th class="ms" title="Regulatory filed">2</th><th class="ms" title="Regulatory approved">3</th><th class="ms" title="Street testing">4</th><th class="ms" title="Staging & infra">5</th><th class="ms" title="Public rides">6</th><th class="ms" title="Paid rides">7</th><th class="ms" title="Unsupervised">8</th><th class="ms" title="Metro scale + airport">9</th><th class="ms" title="Cybercab">10</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Network Snapshot</h2>
+  <div class="tiles" style="margin-top:0;">
+    <div class="tile"><div class="v">5</div><div class="l">Live markets</div><div class="d">Austin · Dallas · Houston · Miami · Bay Area</div></div>
+    <div class="tile"><div class="v">4</div><div class="l">Unsupervised (no human in car)</div><div class="d">Bay Area still uses safety drivers</div></div>
+    <div class="tile"><div class="v">~230</div><div class="l">Est. active fleet (all markets)</div><div class="d">~30–50 TX active + ~170 Bay Area; 175 registered in TX</div></div>
+    <div class="tile"><div class="v">100+</div><div class="l">Cybercabs built</div><div class="d">Giga Texas; public-road tests in Austin since Jun 30</div></div>
+    <div class="tile"><div class="v">0</div><div class="l">Cybercabs in revenue service</div><div class="d">Staged in Dallas, Houston, Miami, Vegas</div></div>
+    <div class="tile"><div class="v">Jul 22</div><div class="l">Next catalyst: Q2 earnings call</div><div class="d">58 Model Ys registered in TX on Jul 15</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Watchlist — hiring-only signals <span class="hint">"AI Safety Operator" postings across 32 cities in ~20 states (Jul 2026); no filings or street testing confirmed yet</span></h2>
+  <div class="pillrow">
+    <span class="pill"><b>Atlanta, GA</b> · Cybercab store display</span>
+    <span class="pill"><b>New Jersey</b> · hostile bill S1677 would ban camera-only AVs; Tesla lobbying hard</span>
+    <span class="pill"><b>Washington, DC</b></span>
+    <span class="pill"><b>Nashville, TN</b></span>
+    <span class="pill"><b>Charlotte / Raleigh, NC</b></span>
+    <span class="pill"><b>Seattle, WA</b></span>
+    <span class="pill"><b>Detroit, MI</b></span>
+    <span class="pill"><b>Minneapolis, MN</b></span>
+    <span class="pill"><b>St. Louis / KC, MO</b></span>
+    <span class="pill"><b>Salt Lake City, UT</b></span>
+    <span class="pill"><b>Baltimore, MD</b></span>
+    <span class="pill"><b>Kansas</b></span>
+  </div>
+</section>
+
+<section>
+  <h2>Upcoming Catalysts</h2>
+  <div class="cat"><ul>
+    <li><b>Jul 22, 2026 — Q2 earnings call.</b> Shareholder Q&amp;A dominated by "why has robotaxi growth stalled?"; 58 Model Ys registered in TX on Jul 15 suggests a pre-call fleet push.</li>
+    <li><b>Cybercab → revenue fleet.</b> Tesla-friendly outlets expect Cybercabs in the Austin fleet "later this summer"; employee rides at Giga Texas announced Jul 10. First city to hit 10/10 will be Austin.</li>
+    <li><b>Nevada NTA permit decision.</b> Application (up to 5,000 vehicles, Las Vegas + both airports) — public comment closed Jul 5; approval unlocks the biggest single authorized fleet.</li>
+    <li><b>Phoenix launch.</b> All permits in hand + first-responder plan filed Jun 2026 covering 9 municipalities; ~60 cars staged. Closest of the un-launched markets.</li>
+    <li><b>FSD v15 rewrite (late 2026 / early 2027).</b> Musk ties real fleet scaling to it; current active fleets are tiny relative to geofences.</li>
+    <li><b>Regulatory tailwind.</b> NHTSA proposing to drop brake-pedal/manual-control requirements for ADS vehicles (Jun 25 proposal) — removes Cybercab's last federal design hurdle.</li>
+  </ul></div>
+</section>
+
+<section>
+  <h2>How the Scoring Works <span class="hint">10 milestones × 1 pt · half credit (◐) for partial · order roughly follows how a launch actually unfolds</span></h2>
+  <div class="rubric">
+    <div class="rub"><b><span class="num">1</span>Intent signal</b>Official announcement, launch-list inclusion, or hiring/job postings</div>
+    <div class="rub"><b><span class="num">2</span>Regulatory filed</b>All needed permits applied for (auto-credit in permissive states like TX/FL/AZ once intent exists)</div>
+    <div class="rub"><b><span class="num">3</span>Regulatory approved</b>Testing + commercial authority in hand (or none required)</div>
+    <div class="rub"><b><span class="num">4</span>Street testing</b>Validation / test vehicles spotted on public roads</div>
+    <div class="rub"><b><span class="num">5</span>Staging &amp; infra</b>Depot / hub built, fleet vehicles staged locally</div>
+    <div class="rub"><b><span class="num">6</span>Public rides</b>Anyone can hail via the Robotaxi app (not invite-only)</div>
+    <div class="rub"><b><span class="num">7</span>Paid at market rates</b>Real dynamic fares, not novelty flat pricing</div>
+    <div class="rub"><b><span class="num">8</span>Unsupervised</b>No safety monitor or driver in the vehicle</div>
+    <div class="rub"><b><span class="num">9</span>Metro scale</b>Geofence covers the metro + airport access</div>
+    <div class="rub"><b><span class="num">10</span>Cybercab</b>◐ = staged/testing locally · ● = carrying paying riders</div>
+  </div>
+  <div class="keyline"><span class="dot">Milestone key:&nbsp;</span> <span class="m m1" style="vertical-align:middle"></span> done &nbsp;&nbsp; <span class="m mh" style="vertical-align:middle"></span> partial (½ pt) &nbsp;&nbsp; <span class="m m0" style="vertical-align:middle"></span> not yet</div>
+  <div class="methd" style="margin-top:12px;"><b>Scoring notes:</b> Bay Area is capped by California law — Tesla operates there as a chauffeured limo service (CPUC TCP permit, safety driver in driver's seat) and has not applied for CA driverless deployment permits, so it cannot legally charge for autonomous rides yet. Florida/Texas/Arizona are permissive states where regulatory milestones auto-credit once intent exists. "Unsupervised" means no human in the car; remote teleoperation support remains in the loop everywhere. Fleet counts are third-party tracker estimates, not Tesla disclosures. Rideshare-opportunity dots (1–5) blend metro population, measured trip volume where cities publish it (NYC TLC, Chicago TNP, CA CPUC), and tourism/airport throughput proxies elsewhere.</div>
+</section>
+
+<div class="divider"><span>Unit Economics</span></div>
+<div class="divsub">The four rideshare models, one framework — same market fare in every base case, so the cost stacks compete head to head</div>
+
+<section>
+  <div class="tablecard" style="margin-bottom:14px;">
+    <table class="econ" style="min-width:900px;">
+      <thead><tr>
+        <th>Base case at a glance — same $2.60 market fare for all four</th><th class="sc">Vehicle capex</th><th class="sc">Human labor</th><th class="sc">Total cost</th><th class="sc">Revenue</th><th class="sc">Gross margin</th><th class="sc">GP / vehicle / yr</th>
+      </tr></thead>
+      <tbody>
+        <tr class="sub"><td><b>Uber</b> <span style="color:var(--text-muted)">· human driver (sets the market fare)</span></td><td class="n">driver-owned (~$35k)</td><td class="n">$1.25 <span style="color:var(--text-muted)">driver pay</span></td><td class="n">$2.36</td><td class="n">$2.60</td><td class="n">9%</td><td class="n">~$10k</td></tr>
+        <tr class="sub"><td><b>Waymo</b> <span style="color:var(--text-muted)">· driverless today</span></td><td class="n">$75–200k</td><td class="n">$0.25 <span style="color:var(--text-muted)">remote</span></td><td class="n">$1.51</td><td class="n">$2.60</td><td class="n">42%</td><td class="n">~$31k</td></tr>
+        <tr class="sub"><td><b>Tesla Model Y</b> <span style="color:var(--text-muted)">· driverless today</span></td><td class="n">~$40k</td><td class="n">$0.15 <span style="color:var(--text-muted)">remote</span></td><td class="n">$0.76</td><td class="n">$2.60</td><td class="n">71%</td><td class="n">~$52k</td></tr>
+        <tr class="total"><td><b>Cybercab</b> <span style="color:var(--text-muted);font-weight:400">· projected at scale</span></td><td class="n">&lt;$30k</td><td class="n">$0.10 <span style="color:var(--text-muted);font-weight:400">remote</span></td><td class="n">$0.48</td><td class="n">$2.60</td><td class="n">82%</td><td class="n pos">~$111k</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="econ-grid">
+    <div class="econ-card">
+      <div class="head"><b>Model Y Robotaxi — as operated today</b><span class="tag">~$38–40k fleet cost · 250–400k-mi life · anchored to observed Austin/TX operations</span></div>
+      <table class="econ">
+        <thead><tr><th>Per paid mile</th><th class="sc">Bear</th><th class="sc">Base</th><th class="sc">Bull</th></tr></thead>
+        <tbody>
+          <tr class="sub"><td class="lbl2">Revenue — bear: today's actual measured pricing · base: market parity · bull: AV premium</td><td class="n">$1.63</td><td class="n">$2.60</td><td class="n">$2.95</td></tr>
+          <tr class="sub"><td class="lbl2">Vehicle depreciation</td><td class="n">$0.28</td><td class="n">$0.22</td><td class="n">$0.17</td></tr>
+          <tr class="sub"><td class="lbl2">Energy (depot ↔ Supercharger mix)</td><td class="n">$0.15</td><td class="n">$0.08</td><td class="n">$0.06</td></tr>
+          <tr class="sub"><td class="lbl2">Maintenance &amp; tires</td><td class="n">$0.13</td><td class="n">$0.10</td><td class="n">$0.08</td></tr>
+          <tr class="sub"><td class="lbl2">Insurance</td><td class="n">$0.15</td><td class="n">$0.10</td><td class="n">$0.07</td></tr>
+          <tr class="sub"><td class="lbl2">Remote ops &amp; monitoring (the big unknown)</td><td class="n">$0.60</td><td class="n">$0.15</td><td class="n">$0.05</td></tr>
+          <tr class="sub"><td class="lbl2">Cleaning, depot, fleet mgmt</td><td class="n">$0.10</td><td class="n">$0.07</td><td class="n">$0.05</td></tr>
+          <tr class="sub"><td class="lbl2">Platform / software</td><td class="n">$0.05</td><td class="n">$0.04</td><td class="n">$0.03</td></tr>
+          <tr class="total"><td>Total cost / paid mile</td><td class="n">$1.46</td><td class="n">$0.76</td><td class="n">$0.51</td></tr>
+          <tr class="total"><td>Gross profit / paid mile</td><td class="n bearcol">$0.17</td><td class="n pos">$1.84</td><td class="n pos">$2.44</td></tr>
+          <tr class="kpi first"><td class="lbl2">Paid miles / vehicle / day</td><td class="n">40</td><td class="n">80</td><td class="n">150</td></tr>
+          <tr class="kpi"><td class="lbl2">Gross profit / vehicle / year</td><td class="n bearcol">~$2.4k</td><td class="n pos">~$52k</td><td class="n pos">~$128k</td></tr>
+          <tr class="kpi"><td class="lbl2">Payback on vehicle</td><td class="n bearcol">~17 yrs</td><td class="n pos">~9 mo</td><td class="n pos">~4 mo</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="econ-card">
+      <div class="head"><b>Cybercab — projected at scale</b><span class="tag">~$20–30k COGS · 2 seats · 500k-mi analyst life assumption · wireless charging, automated cleaning claims</span></div>
+      <table class="econ">
+        <thead><tr><th>Per paid mile</th><th class="sc">Bear</th><th class="sc">Base</th><th class="sc">Bull</th></tr></thead>
+        <tbody>
+          <tr class="sub"><td class="lbl2">Revenue — bear: Musk's stated cheap-mobility pricing · base: market parity · bull: AV premium</td><td class="n">$0.75</td><td class="n">$2.60</td><td class="n">$2.95</td></tr>
+          <tr class="sub"><td class="lbl2">Vehicle depreciation</td><td class="n">$0.18</td><td class="n">$0.09</td><td class="n">$0.05</td></tr>
+          <tr class="sub"><td class="lbl2">Energy (165 Wh/mi, depot charging)</td><td class="n">$0.08</td><td class="n">$0.05</td><td class="n">$0.04</td></tr>
+          <tr class="sub"><td class="lbl2">Maintenance &amp; tires</td><td class="n">$0.08</td><td class="n">$0.06</td><td class="n">$0.04</td></tr>
+          <tr class="sub"><td class="lbl2">Insurance</td><td class="n">$0.15</td><td class="n">$0.09</td><td class="n">$0.05</td></tr>
+          <tr class="sub"><td class="lbl2">Remote ops &amp; monitoring</td><td class="n">$0.25</td><td class="n">$0.10</td><td class="n">$0.03</td></tr>
+          <tr class="sub"><td class="lbl2">Cleaning, depot, fleet mgmt</td><td class="n">$0.08</td><td class="n">$0.05</td><td class="n">$0.03</td></tr>
+          <tr class="sub"><td class="lbl2">Platform / software</td><td class="n">$0.05</td><td class="n">$0.04</td><td class="n">$0.03</td></tr>
+          <tr class="total"><td>Total cost / paid mile</td><td class="n">$0.87</td><td class="n">$0.48</td><td class="n">$0.27</td></tr>
+          <tr class="total"><td>Gross profit / paid mile</td><td class="n neg">−$0.12</td><td class="n pos">$2.12</td><td class="n pos">$2.68</td></tr>
+          <tr class="kpi first"><td class="lbl2">Paid miles / vehicle / day</td><td class="n">60</td><td class="n">150</td><td class="n">300</td></tr>
+          <tr class="kpi"><td class="lbl2">Gross profit / vehicle / year</td><td class="n neg">−$2.5k</td><td class="n pos">~$111k</td><td class="n pos">~$281k</td></tr>
+          <tr class="kpi"><td class="lbl2">Payback on vehicle</td><td class="n neg">never</td><td class="n pos">~3 mo</td><td class="n pos">~1 mo</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="econ-card">
+      <div class="head"><b>Waymo — driverless today (the AV incumbent)</b><span class="tag">$75–200k per vehicle (Ojai → I-PACE) · ~80 paid mi/car/day measured · excludes R&amp;D/corporate overhead (Other Bets lost ~$5.5B in 2025)</span></div>
+      <table class="econ">
+        <thead><tr><th>Per paid mile</th><th class="sc">Bear</th><th class="sc">Base</th><th class="sc">Bull</th></tr></thead>
+        <tbody>
+          <tr class="sub"><td class="lbl2">Revenue — bear: undercut in price war · base: market parity · bull: holds today's measured premium ($19.69 avg fare, +12.7% over Uber)</td><td class="n">$2.30</td><td class="n">$2.60</td><td class="n">$3.90</td></tr>
+          <tr class="sub"><td class="lbl2">Vehicle depreciation (I-PACE $150–200k → Ojai ~$85k)</td><td class="n">$0.90</td><td class="n">$0.60</td><td class="n">$0.30</td></tr>
+          <tr class="sub"><td class="lbl2">Energy</td><td class="n">$0.09</td><td class="n">$0.07</td><td class="n">$0.06</td></tr>
+          <tr class="sub"><td class="lbl2">Maintenance &amp; tires (incl. sensor suite)</td><td class="n">$0.12</td><td class="n">$0.10</td><td class="n">$0.08</td></tr>
+          <tr class="sub"><td class="lbl2">Insurance (strong claims record per Swiss Re)</td><td class="n">$0.18</td><td class="n">$0.14</td><td class="n">$0.08</td></tr>
+          <tr class="sub"><td class="lbl2">Remote assistance &amp; fleet response</td><td class="n">$0.35</td><td class="n">$0.25</td><td class="n">$0.10</td></tr>
+          <tr class="sub"><td class="lbl2">Cleaning, depot, fleet mgmt</td><td class="n">$0.12</td><td class="n">$0.10</td><td class="n">$0.06</td></tr>
+          <tr class="sub"><td class="lbl2">Platform / software / HD mapping</td><td class="n">$0.30</td><td class="n">$0.25</td><td class="n">$0.12</td></tr>
+          <tr class="total"><td>Total cost / paid mile</td><td class="n">$2.06</td><td class="n">$1.51</td><td class="n">$0.80</td></tr>
+          <tr class="total"><td>Gross profit / paid mile</td><td class="n bearcol">$0.24</td><td class="n pos">$1.09</td><td class="n pos">$3.10</td></tr>
+          <tr class="kpi first"><td class="lbl2">Paid miles / vehicle / day (measured ~80 today)</td><td class="n">70</td><td class="n">80</td><td class="n">110</td></tr>
+          <tr class="kpi"><td class="lbl2">Gross profit / vehicle / year</td><td class="n bearcol">~$6k</td><td class="n pos">~$31k</td><td class="n pos">~$119k</td></tr>
+          <tr class="kpi"><td class="lbl2">Payback on vehicle</td><td class="n bearcol">~30 yrs</td><td class="n">~4.5 yrs</td><td class="n pos">~9 mo</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="econ-card">
+      <div class="head"><b>Uber — human driver (the benchmark to beat)</b><span class="tag">Asset-light: driver owns the car · driver pay is the dominant cost, ~55% of every fare · platform take ~28%</span></div>
+      <table class="econ">
+        <thead><tr><th>Per paid mile</th><th class="sc">Bear</th><th class="sc">Base</th><th class="sc">Bull</th></tr></thead>
+        <tbody>
+          <tr class="sub"><td class="lbl2">Revenue ($17.47 measured avg fare, ~6.5-mi avg ride)</td><td class="n">$2.30</td><td class="n">$2.60</td><td class="n">$3.00</td></tr>
+          <tr class="sub"><td class="lbl2">Vehicle depreciation (driver-borne)</td><td class="n">$0.22</td><td class="n">$0.20</td><td class="n">$0.18</td></tr>
+          <tr class="sub"><td class="lbl2">Fuel / energy (driver-borne, gas mix)</td><td class="n">$0.15</td><td class="n">$0.13</td><td class="n">$0.11</td></tr>
+          <tr class="sub"><td class="lbl2">Maintenance &amp; tires (driver-borne)</td><td class="n">$0.13</td><td class="n">$0.11</td><td class="n">$0.10</td></tr>
+          <tr class="sub"><td class="lbl2">Insurance (commercial + rideshare)</td><td class="n">$0.32</td><td class="n">$0.28</td><td class="n">$0.24</td></tr>
+          <tr class="sub"><td class="lbl2"><b>Driver take-home pay</b> — the line robotaxis delete</td><td class="n">$1.10</td><td class="n">$1.25</td><td class="n">$1.45</td></tr>
+          <tr class="sub"><td class="lbl2">Cleaning (driver-borne)</td><td class="n">$0.03</td><td class="n">$0.03</td><td class="n">$0.03</td></tr>
+          <tr class="sub"><td class="lbl2">Platform (support, payments, ops)</td><td class="n">$0.40</td><td class="n">$0.36</td><td class="n">$0.32</td></tr>
+          <tr class="total"><td>Total cost / paid mile</td><td class="n">$2.35</td><td class="n">$2.36</td><td class="n">$2.43</td></tr>
+          <tr class="total"><td>Gross profit / paid mile (system, after driver paid)</td><td class="n neg">−$0.05</td><td class="n pos">$0.24</td><td class="n pos">$0.57</td></tr>
+          <tr class="kpi first"><td class="lbl2">Paid miles / vehicle / day (full-time driver)</td><td class="n">100</td><td class="n">120</td><td class="n">140</td></tr>
+          <tr class="kpi"><td class="lbl2">System gross profit / vehicle / year</td><td class="n neg">−$1.8k</td><td class="n pos">~$10k</td><td class="n pos">~$28k</td></tr>
+          <tr class="kpi"><td class="lbl2">Payback on vehicle</td><td class="n bearcol" colspan="3" style="text-align:right">n/a — capex sits on the driver's balance sheet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h2 style="margin-top:24px;">The Hard Data Behind the Model <span class="hint">measured &amp; disclosed anchors — everything else is estimate</span></h2>
+  <div class="hardrow">
+    <div class="hard"><div class="v">$3.25 + $1.00/mi</div><div class="l">Current fare structure (Mar 2026) — <a href="https://www.notateslaapp.com/news/3757/tesla-increases-robotaxi-base-fare-drastically-increasing-short">NotATeslaApp</a></div></div>
+    <div class="hard"><div class="v">$8.17</div><div class="l">Measured avg Tesla fare across 94,348 rides (vs Uber $17.47, Waymo $19.69) — <a href="https://rideobi.com/tesla/">Obi study</a></div></div>
+    <div class="hard"><div class="v">~1.8M</div><div class="l">Cumulative paid robotaxi miles through Q1 2026 (~$2M implied revenue — immaterial so far) — <a href="https://assets-ir.tesla.com/tesla-contents/IR/TSLA-Q1-2026-Update.pdf">Tesla Q1 update</a></div></div>
+    <div class="hard"><div class="v">165 Wh/mi</div><div class="l">Cybercab certified efficiency — most efficient EV ever, 31% better than Model Y — <a href="https://electrek.co/2026/05/22/tesla-cybercab-most-efficient-ev-ever-165-wh-mi/">Electrek</a></div></div>
+    <div class="hard"><div class="v">&lt;$30k</div><div class="l">Cybercab retail price confirmed by Musk (Feb 2026); &gt;125k/yr installed capacity target at Giga Texas</div></div>
+    <div class="hard"><div class="v">46%</div><div class="l">Waymo miles that run EMPTY (CA CPUC actuals) — the deadhead ratio we apply to Tesla — <a href="https://findingspress.org/article/161870-millions-of-trips-waymo-empty-miles-california-s-first-thousand-days-of-commercial-robotaxi-service">Findings</a></div></div>
+    <div class="hard warn"><div class="v">"Not meaningful"</div><div class="l">Tesla CFO on robotaxi revenue &amp; cost-per-mile metrics (Q4 2025 call) — nothing is officially disclosed yet</div></div>
+  </div>
+
+  <div class="methd">
+    <b>Method:</b> everything is per <b>paid</b> mile — empty repositioning/idle miles are baked into each cost line using Waymo's measured ~54–56% paid-mile ratio (bear 50% / bull 65%); 350 operating days/yr. <b>Fares are normalized:</b> every base case uses the same ~$2.60/paid-mile market rate (today's human-driven price), so margin differences come entirely from the cost stack — pricing <i>strategy</i> lives in bear/bull instead. There's no evidence riders pay a premium for a human driver; the measured evidence runs the other way — Waymo commands +12.7% over Uber and riders pay it (<a href="https://rideobi.com/tesla/">Obi, 94k rides</a>). What IS real today: Tesla deliberately prices at half the market ($8.17 avg fare ≈ $1.63/paid mi — the Model Y bear case), and Musk's stated ambition is bus-ticket pricing (the Cybercab bear case). Those are choices about where to set price, not ceilings on what riders would pay. The bear "remote ops" line reflects today's reality — Tesla confirmed to the CPUC that remote operators back every market and has never disclosed the staffing ratio; at tiny fleet sizes it approaches 1:1, which is why the Model Y bear case barely breaks even (independent estimates put Tesla's current all-in cost near <a href="https://futuresearch.ai/waymo-financial-forecast/">$0.81/mi vs Waymo's $1.40</a>). Reference claims: Musk — Cybercab op cost <a href="https://www.thedrive.com/news/heres-everything-tesla-claimed-it-will-make-last-night-a-taxi-a-bus-and-a-robot">~$0.20/mi, $0.30–0.40 all-in</a>; ARK — <a href="https://eletric-vehicles.com/tesla/musk-says-its-probably-true-cybercab-could-cost-less-than-0-20-per-mile/">&lt;$0.20/mi by 2030</a> ("probably true" — Musk) and fares as low as ~$0.25/mi at scale, a volume scenario our per-vehicle bull doesn't assume. Waymo benchmark: <a href="https://spacedaily.com/m-on-july-8-2026-waymo-announced-fully-driverless-taxis-for-four-more-american-cities-its-fleet-now-giving-about-half-a-million-rides-a-week-and-aiming-for-a-million-a-week-before-the-year-is-out/">500k rides/wk on ~4,000 cars</a> (~18 rides ≈ ~80 paid mi/car/day — our Model Y bull assumes Tesla nearly doubles that), vehicle cost $75–200k vs Cybercab &lt;$30k, and still not unit-economics positive (Other Bets lost ~$5.5B in 2025) — cheap hardware is Tesla's entire thesis.
+    <br><br><b>Waymo &amp; Uber columns:</b> Waymo revenue anchors to its measured $19.69 avg fare (<a href="https://rideobi.com/tesla/">same Obi study</a>) and measured utilization (<a href="https://spacedaily.com/m-on-july-8-2026-waymo-announced-fully-driverless-taxis-for-four-more-american-cities-its-fleet-now-giving-about-half-a-million-rides-a-week-and-aiming-for-a-million-a-week-before-the-year-is-out/">500k rides/wk ÷ ~4,000 cars ≈ 18 rides ≈ 80 paid mi/day</a>); its per-vehicle economics are already gross-profitable — the ~$5.5B losses live in R&amp;D and corporate overhead, which no card here includes for any player. Depreciation is its swing line: the bear is today's $150–200k I-PACE fleet, the bull is the <a href="https://futuresearch.ai/waymo-financial-forecast/">~$85k Zeekr "Ojai"</a>. Uber is modeled as a system (rider fare → all costs incl. the driver's own vehicle costs → driver take-home ≈ 55% of fare, <a href="https://gridwise.io/blog/rideshare/uber-and-lyft-earnings-per-trip-are-rising-in-2025">Gridwise pay data</a>, Uber take ~28%): the human model spends ~$2.36 to deliver a paid mile that robotaxis deliver for $0.48–1.51 — <b>driver pay (~$1.25/paid mi) is the structural cost the other three models replace with $0.03–0.35 of remote ops</b>. That spread, not the fare, is the whole robotaxi investment thesis.
+  </div>
+
+  <div class="unk">
+    <div class="t">Key unknowns — what we're watching for as rollout data comes in</div>
+    <ul>
+      <li>Remote-operator staffing ratio — the single biggest swing factor; confirmed to exist, ratio never disclosed</li>
+      <li>Tesla's actual deadhead % — we borrow Waymo's CPUC number; Tesla files no AV reports in TX/FL</li>
+      <li>AV fleet insurance actuals — no real per-mile figure exists anywhere yet</li>
+      <li>Cybercab lifetime miles — 500k is an analyst assumption, not a Tesla spec</li>
+      <li>Robotaxi revenue line — buried in "Services &amp; other"; watch for first breakout (Q2 call Jul 22?)</li>
+      <li>2-seat constraint — 90% of trips carry 1–2 riders (Musk), but airport/group demand leaks to 4-seaters</li>
+    </ul>
+  </div>
+</section>
+
+<div class="divider"><span>Progress Over Time</span></div>
+<div class="divsub">Key metrics graphed as the rollout unfolds — history seeded from documented milestones, new points appended with each weekly refresh</div>
+
+<section>
+  <div class="charts" id="charts"></div>
+  <div class="methd" style="margin-top:10px;">
+    <b>Reading these:</b> pre-July-2026 points are reconstructed from documented milestone dates (earnings disclosures, DMV registrations, drone lot-counts); everything from the first weekly refresh onward is measured at capture time. The Deployment Index is the sum of all 19 city launch-stage scores — the single number to watch: it only moves when a city crosses a milestone. <b>Metrics we'll add as data emerges:</b> effective fare per paid mile (detects pricing-strategy shifts), total geofenced sq mi, active-fleet count by city, NHTSA crash rate per million miles, remote-ops staffing disclosures, and the robotaxi revenue line the moment Tesla breaks it out.
+  </div>
+</section>
+
+<section>
+  <h2>Changelog</h2>
+  <div class="log" id="changelog"></div>
+</section>
+
+<footer>
+  <div class="srcs"><b>Key sources:</b>
+    <a href="https://thechargeport.com/robotaxi-tracker">ChargePort tracker</a>
+    <a href="https://en.wikipedia.org/wiki/Tesla_Robotaxi">Wikipedia</a>
+    <a href="https://electrek.co/2026/07/03/tesla-robotaxi-miami-service-area-map/">Electrek</a>
+    <a href="https://techcrunch.com/2026/04/18/tesla-brings-its-robotaxi-service-to-dallas-and-houston/">TechCrunch</a>
+    <a href="https://www.notateslaapp.com/news/4031/everything-tesla-announced-during-its-q1-2026-earnings-call-summaryrecap">NotATeslaApp</a>
+    <a href="https://www.teslarati.com/tesla-sends-production-cybercab-no-steering-wheel-pedals-on-road-testing/">Teslarati</a>
+    <a href="https://nta.nv.gov/uploadedFiles/ntanvgov/content/About/Notices/2026/06-June/26-05015_Tesla_Robotaxi_LLC_ADA.pdf">NV NTA docket</a>
+    <a href="https://www.txdmv.gov/AVprogram">TxDMV AV program</a>
+  </div>
+</footer>
+
+</div>
+
+<script>
+// ============ DATA — edit this array to update the tracker ============
+// ms: 10 milestone values in order (1 = done, 0.5 = partial, 0 = not yet)
+// [intent, filed, approved, testing, staging, publicRides, paid, unsupervised, metroScale, cybercab]
+const CITIES = [
+  {
+    city: "Austin", st: "TX", tier: "liveu", tierLabel: "LIVE · UNSUPERVISED",
+    pop: "2.62M", oppScore: 3, oppNote: "Launch market; AUS 21.8M pax/yr; head-to-head vs Waymo",
+    ms: [1,1,1,1,1,1,1,1,1,0.5],
+    notes: [
+      "Launched Jun 22, 2025 (invite-only, $4.20 flat) → fully public → unsupervised rides since Jan 22, 2026; evening unsupervised May 2026",
+      "Geofence = entire metro (~245 sq mi) incl. Bergstrom Airport since Jun 3, 2026 — but only ~14–28 cars active at once",
+      "Pricing now $3.25 base + $1.00/mi (Mar 2026)",
+      "Cybercab: public-road engineering tests since Jun 30, 2026 (no wheel/pedals, monitor in passenger seat); employee rides at Giga Texas announced Jul 10 — the missing half-point is paying riders",
+      "Risk: 14 NHTSA-reported crashes since launch; crash rate ~4× human benchmark per Electrek analysis; NHTSA information request May 2026"
+    ],
+    links: [
+      ["Unsupervised launch — Electrek", "https://electrek.co/2026/01/22/tesla-starts-robotaxi-rides-without-safety-monitor-in-austin-what-you-need-to-know/"],
+      ["Metro-wide geofence — Electrek", "https://electrek.co/2026/06/03/tesla-robotaxi-expands-entire-austin-metro-only-20-vehicles/"],
+      ["Cybercab road tests — Teslarati", "https://www.teslarati.com/tesla-sends-production-cybercab-no-steering-wheel-pedals-on-road-testing/"],
+      ["Crash data — CBS", "https://www.cbsnews.com/news/tesla-robotaxi-austin-14-crashes-nhtsa/"]
+    ]
+  },
+  {
+    city: "Dallas", st: "TX", tier: "liveu", tierLabel: "LIVE · UNSUPERVISED",
+    pop: "8.48M", oppScore: 4, oppNote: "4th-largest US metro; DFW airport 87.8M pax (world #3)",
+    ms: [1,1,1,1,1,1,1,1,0,0.5],
+    notes: [
+      "Launched Apr 18–20, 2026 — unsupervised from day one, straight to public (no invite phase)",
+      "Geofence ~30–35 sq mi: central Dallas + Highland Park; no Fort Worth, no DFW/Love Field airport access",
+      "$3.25 base + $1.00/mi intro pricing; 6am–2am",
+      "~40 Cybercabs staged at Dallas hub 'ready to be awakened'; 24-acre, 212-space fleet center under development in Irving",
+      "Tiny active fleet: ~5 vehicles tracked mid-July"
+    ],
+    links: [
+      ["Launch — TechCrunch", "https://techcrunch.com/2026/04/18/tesla-brings-its-robotaxi-service-to-dallas-and-houston/"],
+      ["Cybercabs staged — Basenor", "https://www.basenor.com/blogs/news/40-tesla-cybercabs-staged-in-dallas-fleet-activation-imminent"],
+      ["Geofence detail — Electrek", "https://electrek.co/2026/04/18/tesla-robotaxi-launches-dallas-houston-small-geofences/"]
+    ]
+  },
+  {
+    city: "Houston", st: "TX", tier: "liveu", tierLabel: "LIVE · UNSUPERVISED",
+    pop: "7.90M", oppScore: 4, oppNote: "63M airport pax 2024; large sprawling car-first metro",
+    ms: [1,1,1,1,1,1,1,1,0,0.5],
+    notes: [
+      "Launched Apr 18–21, 2026 — unsupervised, public, paid from day one",
+      "Geofence ~24–25 sq mi in NW Harris County suburbs (Jersey Village / Willowbrook / FM 1960), ~14 mi from downtown; no downtown, no IAH/Hobby",
+      "Cybercabs accumulating at a Houston robotaxi hub (not in service)",
+      "~6 active vehicles tracked; no geofence expansion since launch"
+    ],
+    links: [
+      ["Launch — Axios Houston", "https://www.axios.com/local/houston/2026/04/21/houston-tesla-robotaxi-service-launch"],
+      ["Cybercab hub — Basenor", "https://www.basenor.com/blogs/news/tesla-cybercab-fleet-growing-at-houston-robotaxi-hub"]
+    ]
+  },
+  {
+    city: "Miami", st: "FL", tier: "liveu", tierLabel: "LIVE · UNSUPERVISED",
+    pop: "6.46M", oppScore: 4, oppNote: "28M visitors/yr (record); MIA 56M pax; no state AV permit needed",
+    ms: [1,1,1,1,1,1,1,1,0,0.5],
+    notes: [
+      "Launched Jul 3, 2026 — first market outside TX/CA; unsupervised from day one (confirmed by Tesla AI head Ashok Elluswamy)",
+      "Tiny start: 2 cars day one; ~10–14 sq mi zone (West Miami–Doral–Sweetwater); excludes downtown, Miami Beach, MIA airport",
+      "~21–24 Cybercabs staged in a lot near MIA days after launch",
+      "Early quality flag: one report put remote-support interventions at ~98% of launch-day rides; 5+ hr waits",
+      "Florida requires no state AV permit — regulatory milestones auto-credit"
+    ],
+    links: [
+      ["Launch + confirmation — Teslarati", "https://www.teslarati.com/tesla-confirms-crucial-detail-miami-robotaxi-launch/"],
+      ["Service map — Electrek", "https://electrek.co/2026/07/03/tesla-robotaxi-miami-service-area-map/"],
+      ["Launch limits — Fox", "https://www.foxnews.com/tech/tesla-robotaxi-miami-launch-comes-limits"]
+    ]
+  },
+  {
+    city: "SF Bay Area", st: "CA", tier: "lives", tierLabel: "LIVE · SUPERVISED",
+    pop: "7.7M", oppScore: 5, oppNote: "Densest US rideshare market (~45 trips/capita in SF proper)",
+    ms: [1,0.5,0.5,1,1,1,1,0,1,0],
+    notes: [
+      "Launched Jul 30, 2025; public app access since Sep 2025; paid from day one (~2× Austin pricing at launch)",
+      "Legally NOT an AV service: operates under a CPUC charter-party (limo) permit with a safety driver in the driver's seat; CPUC confirmed Mar 2026 'Tesla is not operating an autonomous vehicle service'",
+      "Tesla holds only a DMV drivered testing permit — has NOT applied for CA driverless testing or deployment permits (the ½-credit on milestones 2–3)",
+      "Biggest live geofence: ~80-mi span, unofficial ~400 sq mi; SJC airport live (dedicated AV lane); SFO limo permit spotted Jun 2026, service pending; OAK underway",
+      "Largest fleet: ~100–170 vehicles",
+      "Milestone 8 is the wall: CA's new AV enforcement rules (effective Jul 1, 2026) raise the cost of jumping the gun; Cybercab has no legal path in CA today"
+    ],
+    links: [
+      ["CPUC statement — Electrek", "https://electrek.co/2026/03/25/california-regulator-confirms-tesla-not-operating-autonomous-vehicle-service/"],
+      ["SJC airport — TeslaNorth", "https://teslanorth.com/2025/10/27/tesla-expands-bay-area-robotaxi-service-to-san-jose-airport/"],
+      ["SFO permit sighting — Basenor", "https://www.basenor.com/blogs/news/tesla-robotaxi-spotted-with-sfo-airport-permit-what-it-means"]
+    ]
+  },
+  {
+    city: "Phoenix", st: "AZ", tier: "prep", tierLabel: "LAUNCH PREP",
+    pop: "5.19M", oppScore: 4, oppNote: "Waymo's largest territory (315 sq mi); PHX 52M pax; AV-friendliest state",
+    ms: [1,1,1,1,1,0,0,0,0,0.5],
+    notes: [
+      "Every permit in hand: ADOT testing approval (Sep 2025, monitor in driver's seat) + TNC ride-hail permit (Nov 18, 2025 — 'last required step')",
+      "First-responder interaction plan filed Jun 2026 — the prerequisite for unsupervised ops — covering 9 municipalities incl. Scottsdale, Tempe, Mesa, Chandler",
+      "~60 robotaxi-spec Model Ys staged since Apr 2026; Cybercab testing in Arizona reported Jul 2026",
+      "Was on the official 'H1 2026' list — deadline missed, now 'preparations underway'",
+      "Closest un-launched market: nothing regulatory left to do"
+    ],
+    links: [
+      ["TNC permit — TechCrunch", "https://techcrunch.com/2025/11/18/tesla-receives-ride-hailing-permit-in-arizona-in-last-required-step-to-launch-robotaxi-service/"],
+      ["Expansion plan detail — NotATeslaApp", "https://www.notateslaapp.com/news/4275/teslas-robotaxi-expansion-plan-into-arizona-detailed"],
+      ["60 staged — NotATeslaApp", "https://www.notateslaapp.com/news/3923/tesla-begins-staging-for-robotaxi-launch-in-phoenix"]
+    ]
+  },
+  {
+    city: "Las Vegas", st: "NV", tier: "prep", tierLabel: "LAUNCH PREP",
+    pop: "2.42M", oppScore: 5, oppNote: "41.7M visitors/yr; extreme tourism demand; LAS 58M pax",
+    ms: [1,1,0.5,1,1,0,0,0,0,0.5],
+    notes: [
+      "NV DMV testing certificate since Sep 2025 (red AV plates); commercial AVNC permit application filed Jun 5, 2026 — up to 5,000 vehicles in year one, Clark County incl. Harry Reid Intl + Henderson Executive airports",
+      "Public comment closed Jul 5, 2026; NTA staff review ongoing — the ½-credit on milestone 3",
+      "37,000 sq ft depot at 6170 Mohawk St ($3.1M retrofit, 8 Superchargers); gold-liveried robotaxis delivered across Southern Nevada",
+      "Gold Cybercabs spotted Jun 22, 2026 — first Cybercab field sightings outside Texas",
+      "Biggest authorized-fleet upside of any pending market if approved"
+    ],
+    links: [
+      ["NTA application (docket 26-05015)", "https://nta.nv.gov/uploadedFiles/ntanvgov/content/About/Notices/2026/06-June/26-05015_Tesla_Robotaxi_LLC_ADA.pdf"],
+      ["Vegas gearing up — Review-Journal", "https://www.reviewjournal.com/news/news-columns/road-warrior/tesla-robotaxi-appears-to-be-gearing-up-for-vegas-launch-3841256/"],
+      ["Cybercabs in NV — TeslaNorth", "https://teslanorth.com/2026/06/22/tesla-las-vegas-robotaxi-cybercabs-nevada/"]
+    ]
+  },
+  {
+    city: "Orlando", st: "FL", tier: "ann", tierLabel: "ANNOUNCED",
+    pop: "2.94M", oppScore: 4, oppNote: "75.3M visitors 2024 — most-visited US destination; MCO 58M pax",
+    ms: [1,1,1,0.5,0.5,0,0,0,0,0],
+    notes: [
+      "On the official 7-city 'H1 2026' list (Jan 2026 earnings call) — deadline missed, now 'preparations underway'",
+      "Robotaxi-configured Model Ys staged at Lee Vista Blvd Tesla location since Mar 19, 2026 (TX manufacturer plates)",
+      "Fleet-support job postings since Nov 2025",
+      "Florida = no state AV permit needed; when Tesla flips the switch this can move fast"
+    ],
+    links: [
+      ["Orlando staging — Basenor", "https://www.basenor.com/blogs/news/tesla-robotaxi-testing-expands-to-orlando-florida"],
+      ["Job postings — Teslarati", "https://www.teslarati.com/tesla-job-listings-247-robotaxi-operations-several-states/"]
+    ]
+  },
+  {
+    city: "Denver", st: "CO", tier: "test", tierLabel: "TESTING",
+    pop: "3.05M", oppScore: 3, oppNote: "DEN 82.4M pax (6th-busiest world); permissive AV state",
+    ms: [0.5,1,1,1,0,0,0,0,0,0.5],
+    notes: [
+      "Two Cybercabs actively testing in the Denver metro (I-70 etc.) since Jun 2026 with human operators aboard — first confirmed on-road Cybercab testing outside core markets",
+      "Vehicle-operator job postings (Aurora, CO) since Oct 2025",
+      "Never on an official launch list — no announced date",
+      "Colorado is a permissive AV state: no filing required"
+    ],
+    links: [
+      ["Cybercabs in CO — TorqueNews", "https://www.torquenews.com/3768/tesla-cybercabs-spotted-testing-colorado"],
+      ["CO/IL job postings — Teslarati", "https://www.teslarati.com/tesla-eyes-two-new-states-for-robotaxi/"]
+    ]
+  },
+  {
+    city: "San Antonio", st: "TX", tier: "ann", tierLabel: "ANNOUNCED",
+    pop: "2.81M", oppScore: 2, oppNote: "Smallest TX target on proxies; Waymo already runs ~60 sq mi here",
+    ms: [1,1,1,0,0.5,0,0,0,0,0],
+    notes: [
+      "City application filed Jun 2026 for a 56-stall private robotaxi charging facility at 245 W. Josephine St (Pearl District) — first concrete footprint",
+      "Statewide TDLR + TxDMV permits already cover eventual operation",
+      "No vehicles spotted yet; Waymo got here first"
+    ],
+    links: [
+      ["Charging facility filing — GovTech", "https://www.govtech.com/transportation/tesla-wants-to-gear-up-san-antonio-for-private-robotaxis"]
+    ]
+  },
+  {
+    city: "Tampa", st: "FL", tier: "ann", tierLabel: "ANNOUNCED",
+    pop: "3.42M", oppScore: 3, oppNote: "TPA 25M pax; record $1.16B tourism revenue 2024",
+    ms: [1,1,1,0,0,0,0,0,0,0],
+    notes: [
+      "On the official 'H1 2026' list — missed; now 'preparations underway'",
+      "Job postings since Nov 2025; no confirmed vehicle sightings yet",
+      "Waymo launched driverless in Tampa Jul 2026 — Tesla is behind here"
+    ],
+    links: [
+      ["Tampa plans — WFLA", "https://www.wfla.com/news/hillsborough-county/tesla-plans-to-bring-robotaxis-to-tampa/"]
+    ]
+  },
+  {
+    city: "Chicago", st: "IL", tier: "test", tierLabel: "TESTING",
+    pop: "9.41M", oppScore: 5, oppNote: "91M rideshare trips in 2024 (hard city data) — top-3 US market",
+    ms: [0.5,0,0,1,0,0,0,0,0,0],
+    notes: [
+      "Two robotaxi-spec Model Ys spotted testing May 14, 2026 — unannounced city",
+      "Vehicle-operator job postings since Oct 2025",
+      "No filings reported; no launch timeline; Musk: after 'safety testing + regulatory approval' (unverified quote)"
+    ],
+    links: [
+      ["Chicago sighting — Basenor", "https://www.basenor.com/blogs/news/tesla-robotaxi-model-ys-spotted-in-chicago-unannounced-city"],
+      ["Chicago TNP data", "https://data.cityofchicago.org/Transportation/Transportation-Network-Providers-Trips-2025-/6dvr-xwnh"]
+    ]
+  },
+  {
+    city: "Los Angeles", st: "CA", tier: "sig", tierLabel: "EARLY SIGNAL",
+    pop: "12.84M", oppScore: 5, oppNote: "~120M TNC trips/yr (2019-20 CPUC); top-5 Uber global market",
+    ms: [0.5,0.5,0.5,0,0,0,0,0,0,0],
+    notes: [
+      "Robotaxi vehicle-operator job postings since Aug 2025; no confirmed testing sightings",
+      "Statewide CPUC TCP + DMV drivered permits technically cover LA (½-credit), but same CA wall as the Bay Area: no driverless permits applied for",
+      "Enormous prize, hostage to CA regulatory strategy"
+    ],
+    links: [
+      ["LA job postings — Teslarati", "https://www.teslarati.com/tesla-eyes-los-angeles-robotaxi-operation-job-posting-suggests/"]
+    ]
+  },
+  {
+    city: "Boston", st: "MA", tier: "test", tierLabel: "TESTING",
+    pop: "4.94M", oppScore: 4, oppNote: "Dense urban core; key cold-weather proving ground",
+    ms: [0.5,0,0,1,0,0,0,0,0,0],
+    notes: [
+      "Cold-weather validation testing spotted ~Nov 20, 2025; Cybercab sighting reported (single source)",
+      "AI Safety Operator hiring (Jul 2026); no filings, no timeline"
+    ],
+    links: [
+      ["Boston validation — Sawyer Merritt", "https://x.com/SawyerMerritt/status/1991671505130828045"]
+    ]
+  },
+  {
+    city: "New Orleans", st: "LA", tier: "test", tierLabel: "TESTING",
+    pop: "1.27M", oppScore: 3, oppNote: "Tourism-heavy demand (French Quarter, conventions)",
+    ms: [0.5,0,0,1,0,0,0,0,0,0],
+    notes: [
+      "Model Y robotaxis (camera washers, TX factory plates) spotted testing early Jul 2026",
+      "No announcement; scaling gated on FSD v15 per reporting"
+    ],
+    links: [
+      ["NOLA testing — NotATeslaApp", "https://www.notateslaapp.com/news/4408/tesla-robotaxi-service-starts-testing-in-new-orleans"]
+    ]
+  },
+  {
+    city: "Harrisburg area", st: "PA", tier: "test", tierLabel: "TESTING",
+    pop: "0.60M", oppScore: 1, oppNote: "Validation site near state capital, not a launch market per se",
+    ms: [0.5,0,0,1,0,0,0,0,0,0],
+    notes: [
+      "LiDAR ground-truth validation mules at Enola, PA since Nov 17, 2025",
+      "PennDOT driverless permit (Act 130) required — not filed; Cybercabs on showroom display in Bridgeville",
+      "AI Safety Operator hiring in PA (Jul 2026) — Philadelphia/Pittsburgh the likely eventual markets"
+    ],
+    links: [
+      ["PA validation — Teslarati", "https://www.teslarati.com/tesla-robotaxi-just-spotted-new-state-first-time/"]
+    ]
+  },
+  {
+    city: "Lebanon", st: "NH", tier: "test", tierLabel: "TESTING",
+    pop: "0.09M", oppScore: 1, oppNote: "Cold-weather validation site only",
+    ms: [0,0,0,1,0,0,0,0,0,0],
+    notes: [
+      "Winter validation testing spotted Nov 28, 2025 — signal for cold-climate readiness, not a commercial market"
+    ],
+    links: [
+      ["NH validation", "https://blockchain.news/ainews/tesla-begins-robotaxi-ai-validation-testing-in-new-hampshire-for-autonomous-ride-hailing-expansion"]
+    ]
+  },
+  {
+    city: "New York City", st: "NY", tier: "sig", tierLabel: "EARLY SIGNAL",
+    pop: "19.94M", oppScore: 5, oppNote: "#1 US market: ~250M Uber/Lyft trips/yr (TLC data)",
+    ms: [0.5,0,0,0,0,0,0,0,0,0],
+    notes: [
+      "Hiring robotaxi test drivers in NYC since Aug 2025 — but never applied for the required NYC DOT AV testing permit",
+      "Structurally blocked: Gov. Hochul's Jan 2026 proposal legalizes commercial robotaxis statewide EXCEPT New York City",
+      "Biggest prize, hardest regulatory wall in the country"
+    ],
+    links: [
+      ["NYC hiring w/o permits — CNBC", "https://www.cnbc.com/2025/08/12/tesla-hiring-robotaxi-test-drivers-in-nyc-hasnt-applied-for-permits.html"],
+      ["NY proposal excludes NYC — TechCrunch", "https://techcrunch.com/2026/01/13/new-york-governor-clears-path-for-robotaxis-everywhere-with-one-notable-exception/"]
+    ]
+  },
+  {
+    city: "San Diego", st: "CA", tier: "sig", tierLabel: "EARLY SIGNAL",
+    pop: "3.28M", oppScore: 4, oppNote: "3rd-largest CA TNC county (~25–30M trips/yr); Waymo live Jul 2026",
+    ms: [0.5,0,0,0,0,0,0,0,0,0],
+    notes: [
+      "Appeared on an unverified Tesla 'expansion list' (enthusiast post, Jun 2026) — thinnest signal in the model",
+      "Same CA regulatory wall; Waymo launched driverless here Jul 8, 2026"
+    ],
+    links: [
+      ["Waymo SD launch — CNBC", "https://www.cnbc.com/2026/07/08/waymo-starts-driverless-rides-in-san-diego-las-vegas-tampa-denver.html"]
+    ]
+  }
+];
+
+const CHANGELOG = [
+  ["2026-07-18", "v1.5 — Added Progress Over Time: five seeded time-series charts (Deployment Index, cumulative paid miles, Cybercabs observed, live markets, Tesla vs Waymo weekly rides) that grow with each weekly refresh. Page prepared for GitHub Pages hosting + weekly scheduled data refresh."],
+  ["2026-07-18", "v1.4 —Page reorganized for periodic status checks: leaderboard first, network snapshot second, then watchlist/catalysts and scoring methodology; unit economics now its own division led by the four-model side-by-side table, with all data notes beneath it."],
+  ["2026-07-18", "v1.3 —Fares normalized to a common $2.60/paid-mile market rate across all four base cases so margins reflect cost structure, not pricing strategy. Pricing strategy moved to bear/bull: Model Y bear = Tesla's actual $1.63 today, Cybercab bear = Musk's cheap-mobility pricing, Waymo bull = holds its measured +12.7% premium. Base-case GP/vehicle/yr now: Uber ~$10k, Waymo ~$31k, Model Y ~$52k, Cybercab ~$111k."],
+  ["2026-07-18", "v1.2 —Unit economics expanded to all four rideshare models: added Waymo and Uber (human driver) cards plus a base-case at-a-glance comparison. Key spread: driver take-home ~$1.25/paid mi vs remote-ops $0.03–0.35 across the AV models."],
+  ["2026-07-18", "v1.1 —Added unit economics module: bear/base/bull per-paid-mile model for Model Y robotaxi (today) and Cybercab (at scale), anchored to measured fares (Obi 94k-ride study), Waymo CPUC deadhead data, and Cybercab's certified 165 Wh/mi. Key unknowns tracked for future updates."],
+  ["2026-07-18", "v1.0 — Initial model. 19 cities scored across 10 milestones. Live: Austin (9.5), Dallas/Houston/Miami (8.5), Bay Area (7.0, supervised). Cybercab: 100+ built, 0 in revenue service, public-road testing in Austin."]
+];
+
+// ============ RENDER ============
+const barColor = s => s >= 8 ? "var(--seq-650)" : s >= 6 ? "var(--seq-550)" : s >= 4 ? "var(--seq-450)" : s >= 2 ? "var(--seq-350)" : "var(--seq-250)";
+const badgeClass = { liveu: "b-liveu", lives: "b-lives", prep: "b-prep", ann: "b-ann", test: "b-test", sig: "b-sig" };
+const MS_NAMES = ["Intent signal","Regulatory filed","Regulatory approved","Street testing","Staging & infra","Public rides","Paid rides","Unsupervised","Metro scale + airport","Cybercab"];
+
+const tbody = document.getElementById("tbody");
+const scored = CITIES.map(c => ({...c, score: c.ms.reduce((a,b)=>a+b,0)}))
+                     .sort((a,b) => b.score - a.score);
+
+scored.forEach((c, i) => {
+  const tr = document.createElement("tr");
+  tr.className = "cityrow";
+  const msCells = c.ms.map((v, j) => {
+    const cls = v === 1 ? "m1" : v === 0.5 ? "mh" : "m0";
+    const state = v === 1 ? "done" : v === 0.5 ? "partial" : "not yet";
+    return `<td class="ms"><span class="m ${cls}" title="${MS_NAMES[j]}: ${state}"></span></td>`;
+  }).join("");
+  const oppDots = Array.from({length:5}, (_,k) => `<span class="${k < c.oppScore ? "on" : ""}"></span>`).join("");
+  tr.innerHTML = `
+    <td class="rank">${i+1}</td>
+    <td class="city">${c.city}<span class="st">${c.st}</span></td>
+    <td><span class="badge ${badgeClass[c.tier]}">${c.tierLabel}</span></td>
+    <td class="pop">${c.pop}</td>
+    <td class="opp"><span class="oppdots" title="Rideshare opportunity: ${c.oppScore}/5">${oppDots}</span><div class="oppnote">${c.oppNote}</div></td>
+    <td><div class="scorebar"><span class="num">${c.score.toFixed(1)}</span><span class="bar"><i style="width:${c.score*10}%;background:${barColor(c.score)}"></i></span></div></td>
+    ${msCells}`;
+  const dr = document.createElement("tr");
+  dr.className = "detail hiddenrow";
+  dr.innerHTML = `<td colspan="16">
+    <div class="cols">
+      <div><div class="lbl">Status detail</div><ul>${c.notes.map(n => `<li>${n}</li>`).join("")}</ul></div>
+      <div><div class="lbl">Sources</div><ul>${c.links.map(([t,u]) => `<li><a href="${u}" target="_blank" rel="noopener">${t}</a></li>`).join("")}</ul></div>
+    </div></td>`;
+  tr.addEventListener("click", () => dr.classList.toggle("hiddenrow"));
+  tbody.appendChild(tr);
+  tbody.appendChild(dr);
+});
+
+document.getElementById("changelog").innerHTML = CHANGELOG.map(
+  ([d, t]) => `<div class="entry"><span class="date">${d}</span>${t}</div>`
+).join("");
+
+// ============ TIME SERIES — weekly refresh appends points here ============
+const HISTORY = {
+  index: {
+    title: "Deployment Index", sub: "Sum of all 19 city scores (max 190) · pre-Jul-2026 retro-estimated", unit: "",
+    series: [{ name: "Index", color: "var(--seq-450)", step: false, data: [
+      ["2025-06-22", 15], ["2025-09-30", 25], ["2025-12-31", 40], ["2026-03-31", 60], ["2026-07-18", 76.5]
+    ]}]
+  },
+  paidMiles: {
+    title: "Cumulative Paid Robotaxi Miles", sub: "Tesla quarterly disclosures", unit: "M",
+    series: [{ name: "Paid miles", color: "var(--seq-450)", step: false, data: [
+      ["2025-06-22", 0], ["2025-12-31", 0.61], ["2026-03-31", 1.75]
+    ]}]
+  },
+  cybercabs: {
+    title: "Cybercabs Observed", sub: "Giga Texas lot counts (drone surveys) — staged units in Dallas/Miami/Vegas add ~80 more", unit: "",
+    series: [{ name: "Cybercabs", color: "var(--seq-450)", step: false, data: [
+      ["2026-02-17", 1], ["2026-03-05", 25], ["2026-03-25", 36], ["2026-05-23", 60], ["2026-06-14", 85], ["2026-06-15", 102], ["2026-07-11", 110]
+    ]}]
+  },
+  liveMarkets: {
+    title: "Live Markets", sub: "Cities with public paid service", unit: "",
+    series: [{ name: "Markets", color: "var(--seq-450)", step: true, data: [
+      ["2025-06-22", 1], ["2025-07-30", 2], ["2026-04-18", 4], ["2026-07-03", 5], ["2026-07-18", 5]
+    ]}]
+  },
+  rides: {
+    title: "Weekly Rides — Tesla vs Waymo", sub: "Waymo disclosed · Tesla estimated from paid-mile disclosures (~5 mi/ride)", unit: "",
+    series: [
+      { name: "Waymo", color: "#008300", step: false, data: [
+        ["2025-04-30", 250000], ["2025-12-15", 450000], ["2026-07-08", 500000]
+      ]},
+      { name: "Tesla (est.)", color: "var(--seq-450)", step: false, data: [
+        ["2025-09-30", 4000], ["2025-12-31", 7000], ["2026-03-31", 17000], ["2026-07-18", 20000]
+      ]}
+    ]
+  }
+};
+
+// ============ CHART RENDERER ============
+const fmtVal = (v, unit) => unit === "M" ? v.toFixed(2) + "M" : v >= 1e6 ? (v/1e6).toFixed(1) + "M" : v >= 1000 ? Math.round(v/1000) + "k" : (v % 1 ? v.toFixed(1) : v);
+const fmtDate = ms => { const d = new Date(ms); return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" }); };
+const tip = document.createElement("div"); tip.className = "cttip"; document.body.appendChild(tip);
+
+function renderChart(container, cfg) {
+  const card = document.createElement("div"); card.className = "chartcard";
+  card.innerHTML = `<div class="ct">${cfg.title}</div><div class="cs">${cfg.sub}</div>`;
+  const W = 460, H = 170, padL = 38, padR = 52, padT = 10, padB = 22;
+  const all = cfg.series.flatMap(s => s.data.map(([d, v]) => [Date.parse(d), v]));
+  const xs = all.map(p => p[0]), ys = all.map(p => p[1]);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), yMax = Math.max(...ys) * 1.12 || 1;
+  const X = t => padL + (t - x0) / (x1 - x0 || 1) * (W - padL - padR);
+  const Y = v => padT + (1 - v / yMax) * (H - padT - padB);
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  let g = "";
+  // gridlines at 3 even fractions of yMax, labeled at 0.25 / 0.5 / 0.75
+  [0.25, 0.5, 0.75].forEach(f => {
+    const yy = Y(yMax * f);
+    g += `<line class="gridline" x1="${padL}" x2="${W - padR}" y1="${yy}" y2="${yy}"/>`;
+    g += `<text class="axis" x="${padL - 5}" y="${yy + 3}" text-anchor="end">${fmtVal(yMax * f, cfg.unit)}</text>`;
+  });
+  g += `<line x1="${padL}" x2="${W - padR}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--baseline)" stroke-width="1"/>`;
+  // x labels: first & last
+  g += `<text class="axis" x="${padL}" y="${H - 6}">${fmtDate(x0)}</text>`;
+  g += `<text class="axis" x="${W - padR}" y="${H - 6}" text-anchor="end">${fmtDate(x1)}</text>`;
+  cfg.series.forEach(s => {
+    const pts = s.data.map(([d, v]) => [X(Date.parse(d)), Y(v), Date.parse(d), v]);
+    let path = "";
+    pts.forEach((p, i) => {
+      if (i === 0) path = `M${p[0]},${p[1]}`;
+      else if (s.step) path += `H${p[0]}V${p[1]}`;
+      else path += `L${p[0]},${p[1]}`;
+    });
+    g += `<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    pts.forEach(p => { g += `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${s.color}" stroke="var(--surface-1)" stroke-width="2"/>`; });
+    const last = pts[pts.length - 1];
+    g += `<text class="endlab" x="${last[0] + 8}" y="${last[1] + 4}" fill="${s.color}">${fmtVal(last[3], cfg.unit)}</text>`;
+  });
+  svg.innerHTML = g;
+  card.appendChild(svg);
+  if (cfg.series.length > 1) {
+    const leg = document.createElement("div"); leg.className = "legend";
+    leg.innerHTML = cfg.series.map(s => `<span><i style="background:${s.color}"></i>${s.name}</span>`).join("");
+    card.appendChild(leg);
+  }
+  // hover: nearest point across series
+  const allPts = cfg.series.flatMap(s => s.data.map(([d, v]) => ({ x: X(Date.parse(d)), y: Y(v), d, v, name: s.name })));
+  svg.addEventListener("mousemove", e => {
+    const r = svg.getBoundingClientRect();
+    const mx = (e.clientX - r.left) / r.width * W, my = (e.clientY - r.top) / r.height * H;
+    let best = null, bd = 1e9;
+    allPts.forEach(p => { const dd = (p.x - mx) ** 2 + (p.y - my) ** 2; if (dd < bd) { bd = dd; best = p; } });
+    if (best && bd < 900) {
+      tip.style.display = "block";
+      tip.style.left = (e.clientX + 12) + "px"; tip.style.top = (e.clientY - 10) + "px";
+      tip.innerHTML = `${best.name} · ${best.d}<br><b>${fmtVal(best.v, cfg.unit)}${cfg.unit === "M" ? " miles" : ""}</b>`;
+    } else tip.style.display = "none";
+  });
+  svg.addEventListener("mouseleave", () => tip.style.display = "none");
+  container.appendChild(card);
+}
+const chartsEl = document.getElementById("charts");
+Object.values(HISTORY).forEach(cfg => renderChart(chartsEl, cfg));
+</script>
+</body>
+</html>
