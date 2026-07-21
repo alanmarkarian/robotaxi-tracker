@@ -213,7 +213,7 @@
 <header>
   <h1>Tesla Robotaxi / Cybercab Deployment Tracker</h1>
   <div class="sub">City-by-city status of the robotaxi rollout, plus the unit economics of the four rideshare models — built for a quick periodic status check.</div>
-  <span class="asof">Data as of <b>&nbsp;July 19, 2026&nbsp;</b> · v1.6</span>
+  <span class="asof">Data as of <b>&nbsp;July 21, 2026&nbsp;</b> · v1.7</span>
 </header>
 
 <section>
@@ -235,12 +235,12 @@
 <section>
   <h2>Network Snapshot</h2>
   <div class="tiles" style="margin-top:0;">
-    <div class="tile"><div class="v">5</div><div class="l">Live markets</div><div class="d">Austin · Dallas · Houston · Miami · Bay Area</div></div>
-    <div class="tile"><div class="v">4</div><div class="l">Unsupervised (no human in car)</div><div class="d">Bay Area still uses safety drivers</div></div>
-    <div class="tile"><div class="v">~230</div><div class="l">Est. active fleet (all markets)</div><div class="d">~30–50 TX active + ~170 Bay Area; 175 registered in TX</div></div>
-    <div class="tile"><div class="v">110+</div><div class="l">Cybercabs built</div><div class="d">Giga Texas; public-road tests in Austin since Jun 30</div></div>
-    <div class="tile"><div class="v">0</div><div class="l">Cybercabs in revenue service</div><div class="d">Staged in Dallas, Houston, Miami, Vegas</div></div>
-    <div class="tile"><div class="v">Jul 22</div><div class="l">Next catalyst: Q2 earnings call</div><div class="d">58 Model Ys registered in TX on Jul 15</div></div>
+    <div class="tile"><div class="v">7</div><div class="l">Live markets</div><div class="d">Austin · Dallas · Houston · Miami · Orlando · Tampa · Bay Area</div></div>
+    <div class="tile"><div class="v">6</div><div class="l">Unsupervised (no human in car)</div><div class="d">All but Bay Area (still safety drivers); Orlando + Tampa joined Jul 21</div></div>
+    <div class="tile"><div class="v">~200</div><div class="l">Est. active fleet (all markets)</div><div class="d">~21 TX unsupervised (Austin ~17, Dallas ~4) + FL markets small + ~170 Bay Area; fleet flat/shrinking since May</div></div>
+    <div class="tile"><div class="v">245+</div><div class="l">Cybercabs built</div><div class="d">Giga Texas lot count Jul 18 (drone survey); public-road tests in Austin since Jun 30</div></div>
+    <div class="tile"><div class="v">0</div><div class="l">Cybercabs in revenue service</div><div class="d">Staged at Giga TX; none carrying paying riders</div></div>
+    <div class="tile"><div class="v">Jul 22</div><div class="l">Next catalyst: Q2 earnings call</div><div class="d">Tomorrow — first robotaxi revenue breakout &amp; H1-miss reset in focus</div></div>
   </div>
 </section>
 
@@ -265,7 +265,7 @@
 <section>
   <h2>Upcoming Catalysts</h2>
   <div class="cat"><ul>
-    <li><b>Jul 22, 2026 — Q2 earnings call (3 days out).</b> Top shareholder question: 3 straight quarters of missed robotaxi guidance — what are the new milestones? 58 Model Ys registered in TX on Jul 15 (117→175, largest one-day add) looks like a pre-call fleet push. Watch for first robotaxi revenue breakout &amp; H1-miss reset.</li>
+    <li><b>Jul 22, 2026 — Q2 earnings call (tomorrow).</b> Top shareholder question: 3 straight quarters of missed robotaxi guidance — what are the new milestones? The Orlando + Tampa launches on Jul 21 (day before the call) read as a pre-earnings expansion push. Watch for first robotaxi revenue breakout, cumulative paid-mile update, and any remote-operator ratio disclosure. (A dedicated post-call update is scheduled to capture whatever the call reveals.)</li>
     <li><b>Cybercab → revenue fleet.</b> Tesla-friendly outlets expect Cybercabs in the Austin fleet "later this summer"; employee rides at Giga Texas announced Jul 10. First city to hit 10/10 will be Austin.</li>
     <li><b>Nevada NTA permit decision.</b> Application (up to 5,000 vehicles, Las Vegas + both airports) — public comment closed Jul 5; approval unlocks the biggest single authorized fleet.</li>
     <li><b>Phoenix launch.</b> All permits in hand + first-responder plan filed Jun 2026 covering 9 municipalities; ~60 cars staged. Closest of the un-launched markets.</li>
@@ -467,7 +467,7 @@ const CITIES = [
     ms: [1,1,1,1,1,1,1,1,1,0.5],
     notes: [
       "Launched Jun 22, 2025 (invite-only, $4.20 flat) → fully public → unsupervised rides since Jan 22, 2026; evening unsupervised May 2026",
-      "Geofence = entire metro (~245 sq mi) incl. Bergstrom Airport since Jun 3, 2026 — but only ~14–28 cars active at once",
+      "Geofence = entire metro (~245 sq mi) incl. Bergstrom Airport since Jun 3, 2026 — but fleet has stalled at ~17 active cars (Electrek, Jul 21), down from a ~25-car late-April peak; not growing",
       "Pricing now $3.25 base + $1.00/mi (Mar 2026)",
       "Cybercab: public-road engineering tests since Jun 30, 2026 (no wheel/pedals, monitor in passenger seat); employee rides at Giga Texas announced Jul 10 — so far confined to a parking lot per Electrek; the missing half-point is paying riders",
       "Automated Cybercab-cleaning robot confirmed installed at the Austin hub (5900 E Ben White) via closed building permit — cleans a cabin in under ~2 min, no humans (Jul 13, 2026)",
@@ -585,18 +585,20 @@ const CITIES = [
     ]
   },
   {
-    city: "Orlando", st: "FL", tier: "ann", tierLabel: "ANNOUNCED",
+    city: "Orlando", st: "FL", tier: "liveu", tierLabel: "LIVE · UNSUPERVISED",
     pop: "2.94M", oppScore: 4, oppNote: "75.3M visitors 2024 — most-visited US destination; MCO 58M pax",
-    ms: [1,1,1,0.5,0.5,0,0,0,0,0],
+    ms: [1,1,1,1,1,1,1,1,0,0],
     notes: [
-      "On the official 7-city 'H1 2026' list (Jan 2026 earnings call) — deadline missed, now 'preparations underway'",
-      "Robotaxi-configured Model Ys staged at Lee Vista Blvd Tesla location since Mar 19, 2026 (TX manufacturer plates)",
-      "Fleet-support job postings since Nov 2025",
-      "Florida = no state AV permit needed; when Tesla flips the switch this can move fast"
+      "Launched Jul 21, 2026 — unsupervised, public, paid from day one (Model Y, not Cybercab); 18 days after Miami",
+      "Geofence ~12–15 sq mi: eastern/southeastern Orlando (Conway, Lee Vista), bounded by FL-528 Beachline to the south and SR-417 GreeneWay to the east; excludes downtown and MCO airport",
+      "Robotaxi-configured Model Ys had staged at Lee Vista Blvd since Mar 2026 ahead of launch",
+      "Florida requires no state AV permit — regulatory milestones auto-credit",
+      "Missing points: no metro/airport coverage yet (small launch geofence) and no Cybercab presence"
     ],
     links: [
-      ["Orlando staging — Basenor", "https://www.basenor.com/blogs/news/tesla-robotaxi-testing-expands-to-orlando-florida"],
-      ["Job postings — Teslarati", "https://www.teslarati.com/tesla-job-listings-247-robotaxi-operations-several-states/"]
+      ["Orlando/Tampa unsupervised launch — Not a Tesla App", "https://www.notateslaapp.com/news/4470/tesla-robotaxi-launches-unsupervised-rides-in-orlando-tampa"],
+      ["Launch detail — Teslarati", "https://www.teslarati.com/tesla-robotaxi-program-expands-florida-two-new-cities/"],
+      ["Florida three-metro push — Basenor", "https://www.basenor.com/blogs/news/tesla-robotaxi-launches-in-orlando-and-tampa-just-18-days-after-miami"]
     ]
   },
   {
@@ -628,16 +630,20 @@ const CITIES = [
     ]
   },
   {
-    city: "Tampa", st: "FL", tier: "ann", tierLabel: "ANNOUNCED",
+    city: "Tampa", st: "FL", tier: "liveu", tierLabel: "LIVE · UNSUPERVISED",
     pop: "3.42M", oppScore: 3, oppNote: "TPA 25M pax; record $1.16B tourism revenue 2024",
-    ms: [1,1,1,0,0,0,0,0,0,0],
+    ms: [1,1,1,1,1,1,1,1,0,0],
     notes: [
-      "On the official 'H1 2026' list — missed; now 'preparations underway'",
-      "Job postings since Nov 2025; no confirmed vehicle sightings yet",
-      "Waymo launched driverless in Tampa Jul 2026 — Tesla is behind here"
+      "Launched Jul 21, 2026 — unsupervised, public, paid from day one (Model Y), same day as Orlando",
+      "Smallest launch geofence yet: ~4–5 sq mi, central Tampa north of downtown + Hyde Park (West Tampa, Tampa Heights, Seminole Heights along US-41 Business); excludes TPA airport",
+      "Florida requires no state AV permit — regulatory milestones auto-credit",
+      "Now head-to-head with Waymo, which launched driverless in Tampa in Jul 2026",
+      "Missing points: no metro/airport coverage yet (tiny geofence) and no Cybercab presence"
     ],
     links: [
-      ["Tampa plans — WFLA", "https://www.wfla.com/news/hillsborough-county/tesla-plans-to-bring-robotaxis-to-tampa/"]
+      ["Orlando/Tampa unsupervised launch — Not a Tesla App", "https://www.notateslaapp.com/news/4470/tesla-robotaxi-launches-unsupervised-rides-in-orlando-tampa"],
+      ["Austin fleet stalls as FL expands — Electrek", "https://electrek.co/2026/07/21/tesla-robotaxi-tampa-orlando-austin-fleet-stalls/"],
+      ["Florida three-metro push — Basenor", "https://www.basenor.com/blogs/news/tesla-robotaxi-launches-in-orlando-and-tampa-just-18-days-after-miami"]
     ]
   },
   {
@@ -744,6 +750,7 @@ const CITIES = [
 ];
 
 const CHANGELOG = [
+  ["2026-07-21", "v1.7 — Weekly refresh. Big week: Tesla launched unsupervised, public, paid robotaxi service in <b>Orlando and Tampa</b> on Jul 21 (Model Y, not Cybercab), 18 days after Miami and one day before Q2 earnings. Both jump from ANNOUNCED to LIVE·UNSUPERVISED — Orlando 4.0→8.0, Tampa 3.0→8.0 (small launch geofences, no airport/metro coverage, no Cybercab, so they stop short of Miami's 8.5). Live markets 5→7; unsupervised markets 4→6. Deployment Index 76.5→85.5, its first move since tracking began. Cybercabs-observed jumps 110→245: EVXL's Jul 18 Giga Texas drone survey (102 on Jun 15 + ~143 built in 34 days) is a fuller count than the partial 110 lot-count charted Jul 11 — still zero carrying paying riders. Austin's active fleet noted stalling at ~17 cars (down from a ~25 April peak; Electrek). No unit-economics changes — no new disclosures; Nevada NTA permit still pending (comment closed Jul 5). Q2 earnings call is tomorrow (Jul 22) — a dedicated post-call update will capture the paid-mile and any revenue disclosures. Waymo steady at ~500k rides/wk."],
   ["2026-07-19", "v1.6 — First weekly refresh. No milestone moved — Deployment Index flat at 76.5 (a flat line is information). Week's events: 58 Model Ys added to TX robotaxi registrations Jul 15 (117→175, largest one-day add; looks like a pre-earnings push); DC Council held its first robotaxi hearing Jul 13 — Tesla testified and revealed a wheelchair-accessible AV in development (DC watchlist pill updated); automated Cybercab-cleaning robot confirmed at the Austin hub; Miami week-2 rider reports show demand far outstripping the tiny fleet. Cybercabs-built tile 100+→110+ (matches Jul 11 lot count already charted). No unit-economics changes — no new disclosures; Q2 call Jul 22 and the NV NTA decision are the next likely movers. Waymo steady at ~500k rides/wk."],
   ["2026-07-18", "v1.5 — Added Progress Over Time: five seeded time-series charts (Deployment Index, cumulative paid miles, Cybercabs observed, live markets, Tesla vs Waymo weekly rides) that grow with each weekly refresh. Page prepared for GitHub Pages hosting + weekly scheduled data refresh."],
   ["2026-07-18", "v1.4 —Page reorganized for periodic status checks: leaderboard first, network snapshot second, then watchlist/catalysts and scoring methodology; unit economics now its own division led by the four-model side-by-side table, with all data notes beneath it."],
@@ -800,35 +807,35 @@ const HISTORY = {
   index: {
     title: "Deployment Index", sub: "Sum of all 19 city scores (max 190) · pre-Jul-2026 retro-estimated", unit: "",
     series: [{ name: "Index", color: "var(--seq-450)", step: false, data: [
-      ["2025-06-22", 15], ["2025-09-30", 25], ["2025-12-31", 40], ["2026-03-31", 60], ["2026-07-18", 76.5], ["2026-07-19", 76.5]
+      ["2025-06-22", 15], ["2025-09-30", 25], ["2025-12-31", 40], ["2026-03-31", 60], ["2026-07-18", 76.5], ["2026-07-19", 76.5], ["2026-07-21", 85.5]
     ]}]
   },
   paidMiles: {
     title: "Cumulative Paid Robotaxi Miles", sub: "Tesla quarterly disclosures", unit: "M",
     series: [{ name: "Paid miles", color: "var(--seq-450)", step: false, data: [
-      ["2025-06-22", 0], ["2025-12-31", 0.61], ["2026-03-31", 1.75], ["2026-07-19", 1.75]
+      ["2025-06-22", 0], ["2025-12-31", 0.61], ["2026-03-31", 1.75], ["2026-07-19", 1.75], ["2026-07-21", 1.75]
     ]}]
   },
   cybercabs: {
     title: "Cybercabs Observed", sub: "Giga Texas lot counts (drone surveys) — staged units in Dallas/Miami/Vegas add ~80 more", unit: "",
     series: [{ name: "Cybercabs", color: "var(--seq-450)", step: false, data: [
-      ["2026-02-17", 1], ["2026-03-05", 25], ["2026-03-25", 36], ["2026-05-23", 60], ["2026-06-14", 85], ["2026-06-15", 102], ["2026-07-11", 110], ["2026-07-19", 110]
+      ["2026-02-17", 1], ["2026-03-05", 25], ["2026-03-25", 36], ["2026-05-23", 60], ["2026-06-14", 85], ["2026-06-15", 102], ["2026-07-11", 110], ["2026-07-19", 110], ["2026-07-21", 245]
     ]}]
   },
   liveMarkets: {
     title: "Live Markets", sub: "Cities with public paid service", unit: "",
     series: [{ name: "Markets", color: "var(--seq-450)", step: true, data: [
-      ["2025-06-22", 1], ["2025-07-30", 2], ["2026-04-18", 4], ["2026-07-03", 5], ["2026-07-18", 5], ["2026-07-19", 5]
+      ["2025-06-22", 1], ["2025-07-30", 2], ["2026-04-18", 4], ["2026-07-03", 5], ["2026-07-18", 5], ["2026-07-19", 5], ["2026-07-21", 7]
     ]}]
   },
   rides: {
     title: "Weekly Rides — Tesla vs Waymo", sub: "Waymo disclosed · Tesla estimated from paid-mile disclosures (~5 mi/ride)", unit: "",
     series: [
       { name: "Waymo", color: "#008300", step: false, data: [
-        ["2025-04-30", 250000], ["2025-12-15", 450000], ["2026-07-08", 500000], ["2026-07-19", 500000]
+        ["2025-04-30", 250000], ["2025-12-15", 450000], ["2026-07-08", 500000], ["2026-07-19", 500000], ["2026-07-21", 500000]
       ]},
       { name: "Tesla (est.)", color: "var(--seq-450)", step: false, data: [
-        ["2025-09-30", 4000], ["2025-12-31", 7000], ["2026-03-31", 17000], ["2026-07-18", 20000], ["2026-07-19", 20000]
+        ["2025-09-30", 4000], ["2025-12-31", 7000], ["2026-03-31", 17000], ["2026-07-18", 20000], ["2026-07-19", 20000], ["2026-07-21", 20000]
       ]}
     ]
   }
