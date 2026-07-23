@@ -213,7 +213,7 @@
 <header>
   <h1>Tesla Robotaxi / Cybercab Deployment Tracker</h1>
   <div class="sub">City-by-city status of the robotaxi rollout, plus the unit economics of the four rideshare models — built for a quick periodic status check.</div>
-  <span class="asof">Data as of <b>&nbsp;July 22, 2026&nbsp;</b> · v2.0</span>
+  <span class="asof">Data as of <b>&nbsp;July 23, 2026&nbsp;</b> · v2.1</span>
 </header>
 
 <section>
@@ -433,6 +433,14 @@
   <div class="charts" id="charts"></div>
   <div class="methd" style="margin-top:10px;">
     <b>Reading these:</b> pre-July-2026 points are reconstructed from documented milestone dates (earnings disclosures, DMV registrations, drone lot-counts); everything from the first weekly refresh onward is measured at capture time. The Deployment Index is the sum of all 19 city launch-stage scores — the single number to watch: it only moves when a city crosses a milestone. <b>Metrics we'll add as data emerges:</b> effective fare per paid mile (detects pricing-strategy shifts), total geofenced sq mi, active-fleet count by city, NHTSA crash rate per million miles, remote-ops staffing disclosures, and the robotaxi revenue line the moment Tesla breaks it out.
+  </div>
+</section>
+
+<section>
+  <h2>The "10% a Week" Claim <span class="hint">Musk, Q2 call (Jul 22): "we'll continue to scale… it looks like more than 10% a week in terms of miles driven" — that promise, extrapolated</span></h2>
+  <div class="charts" id="tenpct"></div>
+  <div class="methd" style="margin-top:10px;">
+    <b>What this shows:</b> the solid line is the <b>actual weekly paid-mile run-rate</b>, derived from Tesla's cumulative disclosures (each quarter's added miles ÷ weeks in the period — so each point is a period average, not a measured week). The dashed line takes Musk's claim literally: start at a ~60k mi/wk current run-rate (midpoint of the Q2 chart-read range, ~54–69k/wk depending on whether you use Tesla's Q1 update figure or <a href="https://electrek.co/2026/07/22/tesla-robotaxi-growth-flat-own-chart-q2-2026/">Electrek's deck-chart read</a>) and compound 10% weekly through Dec 31, 2026. <b>If the claim holds:</b> ~545k paid mi/wk by year-end — a ~9× jump in 23 weeks — adding ~4.9M miles in H2 for ~7.3M cumulative (vs ~2.45M today). For scale, that year-end rate would still be ~14% of the ~4M weekly autonomous miles Waymo runs <i>today</i>. <b>The tension to watch:</b> the derived run-rate went 22k → 88k → 54k across the last three periods — Q2's own deck shows growth flat-to-down, so 10%/wk requires an immediate, sustained inflection (Phoenix, Vegas, and Cybercab fleet activation are the available levers). Q3's cumulative number will settle it: the claim implies ~4.4M+ cumulative by late October.
   </div>
 </section>
 
@@ -752,7 +760,8 @@ const CITIES = [
 ];
 
 const CHANGELOG = [
-  ["2026-07-22", "v2.0 — <b>Q2 correction &amp; final pass: Tesla DID disclose paid miles.</b> The v1.8/v1.9 claim that Q2 gave 'no paid-miles update' was wrong — the shareholder deck contains a cumulative paid-robotaxi-miles <b>chart</b> (no figure in the release text, which is why the first two passes missed it): ~2.4M per <a href='https://electrek.co/2026/07/22/tesla-robotaxi-growth-flat-own-chart-q2-2026/'>Electrek's chart read</a>, ~2.5M per <a href='https://www.notateslaapp.com/news/4481/summary-of-teslas-2026-q2-earnings-call-cybercab-fsd-ai4-and-more'>NotATeslaApp</a>. The paid-miles series gets its Q2 point after all (2.45M plotted at disclosure date; Q2-end value). The bearish kicker: Electrek's quarter-by-quarter read shows Q2 added ~900k paid miles — <b>flat vs Q1's ~900k</b> — sitting awkwardly beside Musk's '&gt;10%/week' growth line and the release's 'literally exponential' framing. Also picked up from the fuller call recaps: the robotaxi fleet is <b>already running FSD v15</b> (7 major track improvements over v14) — so the old 'waiting on v15' scaling catalyst is retired and fleet count becomes the thing to watch; Cybercab production rate is deliberately 'matched to the expected fleet deployment rate' (i.e., slow by choice, consistent with the pulled 2026 volume target); Musk floated expanding 'to entire states' rather than city-by-city; FSD subscriptions hit 1.48M (+56% YoY). Still dark after three passes: robotaxi revenue breakout, cost-per-mile, remote-operator ratio. No milestone moves — Deployment Index holds 85.5. No Phoenix launch or NV NTA decision as of tonight."],
+  ["2026-07-23", "v2.1 — <b>New: the '10% a Week' chart</b> (bottom of page). On the Q2 call Musk said Robotaxi will 'continue to scale… more than 10% a week <b>in terms of miles driven</b>' (per the <a href='https://news.alphastreet.com/tesla-inc-tsla-q2-2026-earnings-call-transcript/'>call transcript</a>). The new chart plots the actual weekly paid-mile run-rate derived from Tesla's own cumulative disclosures (22k → 88k → 54k mi/wk over the last three periods) against that claim compounded from a ~60k mi/wk base through Dec 31: it implies ~545k mi/wk (~9×) and ~7.3M cumulative paid miles by year-end — vs ~2.45M today, and still ~14% of Waymo's current weekly autonomous miles. Q3's disclosure (~4.4M+ cumulative implied by late Oct) is the test. Chart renderer gains dashed-line support for projections. No milestone moves; Deployment Index holds 85.5; no post-call news (no Phoenix launch, no NV NTA decision) as of today."],
+  ["2026-07-22", "v2.0 —<b>Q2 correction &amp; final pass: Tesla DID disclose paid miles.</b> The v1.8/v1.9 claim that Q2 gave 'no paid-miles update' was wrong — the shareholder deck contains a cumulative paid-robotaxi-miles <b>chart</b> (no figure in the release text, which is why the first two passes missed it): ~2.4M per <a href='https://electrek.co/2026/07/22/tesla-robotaxi-growth-flat-own-chart-q2-2026/'>Electrek's chart read</a>, ~2.5M per <a href='https://www.notateslaapp.com/news/4481/summary-of-teslas-2026-q2-earnings-call-cybercab-fsd-ai4-and-more'>NotATeslaApp</a>. The paid-miles series gets its Q2 point after all (2.45M plotted at disclosure date; Q2-end value). The bearish kicker: Electrek's quarter-by-quarter read shows Q2 added ~900k paid miles — <b>flat vs Q1's ~900k</b> — sitting awkwardly beside Musk's '&gt;10%/week' growth line and the release's 'literally exponential' framing. Also picked up from the fuller call recaps: the robotaxi fleet is <b>already running FSD v15</b> (7 major track improvements over v14) — so the old 'waiting on v15' scaling catalyst is retired and fleet count becomes the thing to watch; Cybercab production rate is deliberately 'matched to the expected fleet deployment rate' (i.e., slow by choice, consistent with the pulled 2026 volume target); Musk floated expanding 'to entire states' rather than city-by-city; FSD subscriptions hit 1.48M (+56% YoY). Still dark after three passes: robotaxi revenue breakout, cost-per-mile, remote-operator ratio. No milestone moves — Deployment Index holds 85.5. No Phoenix launch or NV NTA decision as of tonight."],
   ["2026-07-22", "v1.9 — <b>Q2 call follow-up (deeper transcript read).</b> One material addition the same-day v1.8 pass missed: on the call Tesla <b>removed its guidance that Cybercab would reach volume production in 2026</b>, tying the scale ramp to 4680 battery-cell output and giving no replacement date (<a href='https://techcrunch.com/2026/07/22/tesla-spending-skyrockets-as-cybercab-semi-megapack-production-timeline-slips/'>TechCrunch</a>, corroborated by DigitalToday) — so production has 'begun' (pilot line, ~245 units) but 'at scale' has slipped. Reflected in the Cybercabs snapshot tile ('pilot line only'), the Cybercab catalyst ('timeline pushed'), the Austin detail, and the Cybercab unit-economics header ('at scale now further out'). No milestone moves — still a ◐ on Austin's Cybercab line, Deployment Index holds 85.5. Also verified in this pass: the widely-cited 'half of US population by year-end' and 'seven thousand miles / handful of vehicles' lines circulating in one 'full transcript' repost are <b>Q2 2025</b> language, not this call — deliberately excluded. Confirmed genuinely-Q2-2026 call items remain: robotaxi miles growing '&gt;10%' per week (Musk), 7 metros live, Phoenix + Las Vegas in prep, and no paid-miles / revenue / remote-ops disclosure."],
   ["2026-07-22", "v1.8 — <b>Q2 earnings special update</b> (call 5:30pm ET today). The thesis got confirmations, not numbers. Confirmed: <b>Cybercab production has officially begun at Giga Texas</b> (first time in a shareholder release), with employee rides on the factory campus since July — still 0 paying riders, so Austin holds at ◐ on milestone 10; robotaxi now framed as \"seven major U.S. metros\" with \"preparations underway in Phoenix and Las Vegas\" and testing/permitting/first-responder training in further metros (all already tracked — no new city named). What stayed dark: <b>no cumulative paid-miles update</b> — the first quarter without one since disclosures began, so the paid-miles chart deliberately gets no new point (last hard number remains ~1.8M through Q1); no robotaxi revenue breakout, no cost-per-mile, no remote-operator ratio — every key unit-economics unknown survives to Q3. Only new operating datapoint came on the call: Musk says robotaxi miles are growing \"more than 10%\" per week, with safety moderating the expansion pace. Financial frame: record $28.2B revenue (+26%) but non-GAAP EPS $0.33 vs ~$0.53 consensus, operating margin 1.4%, FCF −$1.09B, opex +47% on AI/Optimus/robotaxi, 2026 capex &gt;$25B — the spend is real even if the disclosure isn't; stock ~−3% after hours. <b>No milestone moved — Deployment Index holds at 85.5.</b> Yesterday's Orlando + Tampa unsupervised launches (v1.7) were re-confirmed in the release. Next catalysts: Phoenix launch, NV NTA decision, Cybercab's first paying rider, Q3 call."],
   ["2026-07-21", "v1.7 — Weekly refresh. Big week: Tesla launched unsupervised, public, paid robotaxi service in <b>Orlando and Tampa</b> on Jul 21 (Model Y, not Cybercab), 18 days after Miami and one day before Q2 earnings. Both jump from ANNOUNCED to LIVE·UNSUPERVISED — Orlando 4.0→8.0, Tampa 3.0→8.0 (small launch geofences, no airport/metro coverage, no Cybercab, so they stop short of Miami's 8.5). Live markets 5→7; unsupervised markets 4→6. Deployment Index 76.5→85.5, its first move since tracking began. Cybercabs-observed jumps 110→245: EVXL's Jul 18 Giga Texas drone survey (102 on Jun 15 + ~143 built in 34 days) is a fuller count than the partial 110 lot-count charted Jul 11 — still zero carrying paying riders. Austin's active fleet noted stalling at ~17 cars (down from a ~25 April peak; Electrek). No unit-economics changes — no new disclosures; Nevada NTA permit still pending (comment closed Jul 5). Q2 earnings call is tomorrow (Jul 22) — a dedicated post-call update will capture the paid-mile and any revenue disclosures. Waymo steady at ~500k rides/wk."],
@@ -812,35 +821,35 @@ const HISTORY = {
   index: {
     title: "Deployment Index", sub: "Sum of all 19 city scores (max 190) · pre-Jul-2026 retro-estimated", unit: "",
     series: [{ name: "Index", color: "var(--seq-450)", step: false, data: [
-      ["2025-06-22", 15], ["2025-09-30", 25], ["2025-12-31", 40], ["2026-03-31", 60], ["2026-07-18", 76.5], ["2026-07-19", 76.5], ["2026-07-21", 85.5], ["2026-07-22", 85.5]
+      ["2025-06-22", 15], ["2025-09-30", 25], ["2025-12-31", 40], ["2026-03-31", 60], ["2026-07-18", 76.5], ["2026-07-19", 76.5], ["2026-07-21", 85.5], ["2026-07-22", 85.5], ["2026-07-23", 85.5]
     ]}]
   },
   paidMiles: {
     title: "Cumulative Paid Robotaxi Miles", sub: "Tesla quarterly disclosures", unit: "M",
     series: [{ name: "Paid miles", color: "var(--seq-450)", step: false, data: [
-      ["2025-06-22", 0], ["2025-12-31", 0.61], ["2026-03-31", 1.75], ["2026-07-19", 1.75], ["2026-07-21", 1.75], ["2026-07-22", 2.45]
+      ["2025-06-22", 0], ["2025-12-31", 0.61], ["2026-03-31", 1.75], ["2026-07-19", 1.75], ["2026-07-21", 1.75], ["2026-07-22", 2.45], ["2026-07-23", 2.45]
     ]}]
   },
   cybercabs: {
     title: "Cybercabs Observed", sub: "Giga Texas lot counts (drone surveys) — staged units in Dallas/Miami/Vegas add ~80 more", unit: "",
     series: [{ name: "Cybercabs", color: "var(--seq-450)", step: false, data: [
-      ["2026-02-17", 1], ["2026-03-05", 25], ["2026-03-25", 36], ["2026-05-23", 60], ["2026-06-14", 85], ["2026-06-15", 102], ["2026-07-11", 110], ["2026-07-19", 110], ["2026-07-21", 245], ["2026-07-22", 245]
+      ["2026-02-17", 1], ["2026-03-05", 25], ["2026-03-25", 36], ["2026-05-23", 60], ["2026-06-14", 85], ["2026-06-15", 102], ["2026-07-11", 110], ["2026-07-19", 110], ["2026-07-21", 245], ["2026-07-22", 245], ["2026-07-23", 245]
     ]}]
   },
   liveMarkets: {
     title: "Live Markets", sub: "Cities with public paid service", unit: "",
     series: [{ name: "Markets", color: "var(--seq-450)", step: true, data: [
-      ["2025-06-22", 1], ["2025-07-30", 2], ["2026-04-18", 4], ["2026-07-03", 5], ["2026-07-18", 5], ["2026-07-19", 5], ["2026-07-21", 7], ["2026-07-22", 7]
+      ["2025-06-22", 1], ["2025-07-30", 2], ["2026-04-18", 4], ["2026-07-03", 5], ["2026-07-18", 5], ["2026-07-19", 5], ["2026-07-21", 7], ["2026-07-22", 7], ["2026-07-23", 7]
     ]}]
   },
   rides: {
     title: "Weekly Rides — Tesla vs Waymo", sub: "Waymo disclosed · Tesla estimated from paid-mile disclosures (~5 mi/ride)", unit: "",
     series: [
       { name: "Waymo", color: "#008300", step: false, data: [
-        ["2025-04-30", 250000], ["2025-12-15", 450000], ["2026-07-08", 500000], ["2026-07-19", 500000], ["2026-07-21", 500000], ["2026-07-22", 500000]
+        ["2025-04-30", 250000], ["2025-12-15", 450000], ["2026-07-08", 500000], ["2026-07-19", 500000], ["2026-07-21", 500000], ["2026-07-22", 500000], ["2026-07-23", 500000]
       ]},
       { name: "Tesla (est.)", color: "var(--seq-450)", step: false, data: [
-        ["2025-09-30", 4000], ["2025-12-31", 7000], ["2026-03-31", 17000], ["2026-07-18", 20000], ["2026-07-19", 20000], ["2026-07-21", 20000], ["2026-07-22", 20000]
+        ["2025-09-30", 4000], ["2025-12-31", 7000], ["2026-03-31", 17000], ["2026-07-18", 20000], ["2026-07-19", 20000], ["2026-07-21", 20000], ["2026-07-22", 20000], ["2026-07-23", 20000]
       ]}
     ]
   }
@@ -881,7 +890,7 @@ function renderChart(container, cfg) {
       else if (s.step) path += `H${p[0]}V${p[1]}`;
       else path += `L${p[0]},${p[1]}`;
     });
-    g += `<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    g += `<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"${s.dash ? ' stroke-dasharray="6 5"' : ""}/>`;
     pts.forEach(p => { g += `<circle cx="${p[0]}" cy="${p[1]}" r="3.5" fill="${s.color}" stroke="var(--surface-1)" stroke-width="2"/>`; });
     const last = pts[pts.length - 1];
     g += `<text class="endlab" x="${last[0] + 8}" y="${last[1] + 4}" fill="${s.color}">${fmtVal(last[3], cfg.unit)}</text>`;
@@ -911,6 +920,28 @@ function renderChart(container, cfg) {
 }
 const chartsEl = document.getElementById("charts");
 Object.values(HISTORY).forEach(cfg => renderChart(chartsEl, cfg));
+
+// ============ "10% A WEEK" EXTRAPOLATION (added v2.1) ============
+// Musk, Q2 2026 call: ">10% a week in terms of miles driven".
+// Actual = quarterly paid-mile adds ÷ weeks in period (period averages).
+// Projection = 60k mi/wk at Jul 22 compounding 1.1^weeks through Dec 31, 2026.
+const TENPCT = {
+  title: "Weekly Paid-Mile Run-Rate — Actual vs the '10%/Week' Claim",
+  sub: "Solid: derived from Tesla's cumulative disclosures · Dashed: 10%/wk compounded from the Q2 call through year-end",
+  unit: "",
+  series: [
+    { name: "Actual run-rate (period avg)", color: "var(--seq-450)", step: false, data: [
+      ["2025-12-31", 22000], ["2026-03-31", 88000], ["2026-06-30", 54000]
+    ]},
+    { name: "10%/wk claim → Dec 31", color: "var(--serious)", dash: true, step: false, data: [
+      ["2026-07-22", 60000], ["2026-08-05", 72600], ["2026-08-19", 87846], ["2026-09-02", 106294],
+      ["2026-09-16", 128615], ["2026-09-30", 155625], ["2026-10-14", 188306], ["2026-10-28", 227850],
+      ["2026-11-11", 275698], ["2026-11-25", 333595], ["2026-12-09", 403650], ["2026-12-23", 488416],
+      ["2026-12-31", 544623]
+    ]}
+  ]
+};
+renderChart(document.getElementById("tenpct"), TENPCT);
 </script>
 </body>
 </html>
